@@ -9,3 +9,7 @@
 音效由 Web Audio 合成，不使用第三方歌曲。所有用户文本通过 textContent 渲染。减少动态效果的系统设置会停用粒子和镜头过渡。
 
 验收：检查 JavaScript 语法、配置编码与解码、所有静态资源路径，以及 HTTP 入口响应。未执行浏览器 UI 自动化测试。
+
+## 部署
+
+GitHub 默认分支使用 `main`。Cloudflare Pages 不需要构建命令，输出目录填写 `dist`。完整设置见 [CLOUDFLARE-DEPLOY.md](CLOUDFLARE-DEPLOY.md)。

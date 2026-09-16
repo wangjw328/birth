@@ -1,0 +1,4 @@
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+export function classifyHand(points){if(!Array.isArray(points)||points.length!==21||points.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))return null;const size=distance(points[0],points[9]);if(size<.025)return null;let extended=0;for(const [tip,joint] of [[8,6],[12,10],[16,14],[20,18]])if(distance(points[tip],points[0])>distance(points[joint],points[0])*1.17)extended++;const pinch=distance(points[4],points[8])/size;return{x:1-points[8].x,y:points[8].y,palmX:1-points[9].x,palmY:points[9].y,pinch:pinch<.3,open:extended>=3&&pinch>.4,fist:extended===0&&pinch>.32,extended,pinchRatio:pinch};}
+export function twoHandSpread(a,b){return Math.max(.65,Math.min(1.65,Math.hypot(a.palmX-b.palmX,a.palmY-b.palmY)*2.8));}
+export function stableGesture(previous,current,now){if(current!==previous.name)return{name:current,since:now,ready:false};return{name:current,since:previous.since,ready:now-previous.since>280};}

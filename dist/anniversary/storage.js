@@ -1,0 +1,4 @@
+let database;
+async function db(){if(database)return database;database=await new Promise((resolve,reject)=>{const request=indexedDB.open('anniversary-cinema',1);request.onupgradeneeded=()=>request.result.createObjectStore('drafts');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});return database;}
+export async function loadDraft(){const store=await db();return new Promise((resolve,reject)=>{const request=store.transaction('drafts').objectStore('drafts').get('current');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}
+export async function saveDraft(value){const store=await db();return new Promise((resolve,reject)=>{const tx=store.transaction('drafts','readwrite');tx.objectStore('drafts').put(value,'current');tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('保存中断'));});}

@@ -1,2 +1,13 @@
 .sites-runtime/
 *.log
+.wrangler/
+.dev.vars
+.env
+.env.*
+.codex/
+reference-analysis/
+V*-NOTES.md
+*.test.mjs
+check-*.mjs
+preview-server.mjs
+启动网站预览.cmd
