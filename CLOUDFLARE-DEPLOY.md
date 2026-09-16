@@ -24,8 +24,9 @@
 
 ## 网站入口
 
-- 主题首页：`/`
-- 生日：`/birthday/`
+- 最新生日体验：`/`（自动进入 `/birthday/`）
+- 生日直接入口：`/birthday/`
+- 全部主题入口：`/collection/`
 - 纪念日：`/anniversary/`
 - 告白：`/confession/`
 - 节日：`/festivals/`

@@ -3,39 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0c1b25">
-  <meta name="description" content="赴一场月光的约，拆开专属于你的生日来信。">
-  <title>月光来信 · 一场只属于你的生日</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230c1b25'/%3E%3Cpath d='M44 13a22 22 0 1 0 7 34A23 23 0 0 1 44 13Z' fill='%23e9cd96'/%3E%3C/svg%3E">
-  <link rel="preload" as="image" href="./assets/garden.webp">
-  <link rel="stylesheet" href="./style.css">
+  <meta name="theme-color" content="#080d17">
+  <meta http-equiv="refresh" content="0;url=./birthday/">
+  <title>正在进入星愿房间</title>
+  <style>
+    html,body{height:100%;margin:0;background:#080d17;color:#eadfc9;font-family:system-ui,"Microsoft YaHei",sans-serif}
+    body{display:grid;place-items:center;text-align:center}a{color:#e5be85;text-decoration:none;border-bottom:1px solid #e5be8566;padding-bottom:4px}
+  </style>
+  <script>
+    const target=new URL('./birthday/',location.href);
+    target.search=location.search;
+    target.hash=location.hash;
+    location.replace(target.href);
+  </script>
 </head>
-<body data-stage="arrival" data-tone="moon">
-  <div class="world" aria-hidden="true"><div class="landscape"></div><div class="shade"></div><div class="moon-haze"></div><canvas id="fireflies"></canvas><div class="grain"></div></div>
-  <header class="site-header">
-    <a class="brand" href="#" aria-label="月光来信，回到首页"><span class="brand-symbol">☾</span><span>月光来信<small>MOONLIT LETTERS</small></span></a>
-    <div class="header-actions"><button class="quiet-button" id="edit-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15v5Z"/></svg><span>定制这封信</span></button><span class="header-divider"></span><button class="quiet-button" id="sound-button" aria-pressed="false" aria-label="开启环境音"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm5 3c2 2 2 6 0 8m3-11c4 4 4 10 0 14"/></svg><span id="sound-label">声音关</span></button></div>
-  </header>
-  <main id="experience">
-    <section class="scene-panel arrival-panel" id="arrival" aria-labelledby="arrival-title">
-      <div class="eyebrow"><span></span> A MOMENT, JUST FOR YOU</div>
-      <h1 id="arrival-title">今晚，<br>月光只为你停留。</h1>
-      <p class="scene-description" id="intro-copy">有些祝福，想慢慢说给你听。</p>
-      <button class="primary-button" id="open-letter">拆开这封祝福 <span aria-hidden="true">↗</span></button>
-      <div class="arrival-note"><span class="tiny-star">✧</span><span>不必赶路，今晚的时间属于你。</span></div>
-    </section>
-    <section class="scene-panel letter-panel" id="letter" hidden aria-labelledby="letter-heading">
-      <div class="letter-intro"><div class="eyebrow">01 / A LETTER FOR YOU</div><h2 id="letter-heading">见字，如晤。</h2><p>有些话，借今晚的月光送给你。</p></div>
-      <article class="letter-paper"><div class="paper-topline"><span>月光邮局</span><span>✦</span><span>特别投递</span></div><h3 id="letter-recipient">亲爱的你：</h3><div id="letter-body"></div><div class="letter-signature"><span>把温柔寄给你的人</span><strong id="letter-sender">一个惦记你的人</strong></div><div class="paper-bottomline">愿每一个平凡的日子，都藏着微小的光。</div></article>
-      <button class="primary-button" id="to-wish">收好这封信，许个愿 <span aria-hidden="true">→</span></button>
-    </section>
-    <section class="scene-panel wish-panel" id="wish" hidden aria-labelledby="wish-heading"><div class="eyebrow">02 / MAKE A LITTLE WISH</div><h2 id="wish-heading">把愿望，<br>轻轻交给月光。</h2><p class="scene-description">闭上眼，想一件让你期待明天的事。<br>准备好后，长按下方的微光。</p><div class="wish-control"><button id="hold-wish" class="hold-button" aria-label="按住三秒许愿，也可以使用下方的轻点许愿"><span class="hold-glyph" aria-hidden="true">✧</span><span id="hold-label">按住许愿</span><svg class="hold-ring" viewBox="0 0 144 144" aria-hidden="true"><circle cx="72" cy="72" r="68"/></svg></button><p id="wish-status" role="status">让心愿在掌心停留 3 秒</p><button class="text-button" id="simple-wish">也可以轻点这里，送出愿望</button></div></section>
-    <section class="scene-panel ending-panel" id="ending" hidden aria-labelledby="ending-heading"><div class="eyebrow">A NEW CHAPTER BEGINS</div><div class="ending-star" aria-hidden="true">✧</div><p class="ending-preface">月光收到了你的愿望。</p><h2 id="ending-heading">生日快乐，<span id="ending-recipient">亲爱的你</span>。</h2><p class="ending-message" id="ending-copy">愿你有热爱，有回应。<br>愿新的一岁，每一步都更靠近喜欢的自己。</p><div class="ending-signature">WITH LOVE <span>—</span> <span id="ending-sender">一个惦记你的人</span></div><div class="ending-actions"><button class="primary-button" id="replay">再赴一次月光的约 <span aria-hidden="true">↺</span></button><button class="text-button" id="ending-edit">也为某个人写一封</button></div></section>
-  </main>
-  <footer class="site-footer"><span class="footer-note">一封来信，一点微光。</span><nav class="journey" aria-label="祝福进度"><button data-go="arrival" aria-current="step"><span>赴约</span><i></i></button><span class="journey-line"></span><button data-go="letter"><span>拆信</span><i></i></button><span class="journey-line"></span><button data-go="wish"><span>许愿</span><i></i></button></nav><span class="footer-count" id="stage-count">01 — 03</span></footer>
-  <dialog id="editor" aria-labelledby="editor-heading"><div class="editor-head"><div><div class="eyebrow">MAKE IT YOURS</div><h2 id="editor-heading">把心意写进月光里</h2></div><button id="close-editor" class="icon-button" aria-label="关闭编辑">×</button></div><form id="editor-form"><p class="editor-note">修改文字与氛围，生成一封专属的生日来信。</p><fieldset><legend>这封信，写给谁？</legend><div class="form-row"><label>收件人称呼<input name="recipient" maxlength="16" required placeholder="例如：小雨"></label><label>你的署名<input name="sender" maxlength="24" required placeholder="例如：阿辰"></label></div></fieldset><fieldset><legend>写下你想说的话</legend><label>开场标题 <span>换行可以分成两行</span><textarea name="title" maxlength="50" rows="2" required></textarea></label><label>开场短句<input name="intro" maxlength="70" required></label><label>信件正文 <span>最多 600 字</span><textarea name="letter" maxlength="600" rows="6" required></textarea></label><label>生日结语 <span>最多 120 字</span><textarea name="ending" maxlength="120" rows="3" required></textarea></label></fieldset><fieldset><legend>选择今晚的氛围</legend><div class="tone-options"><label><input type="radio" name="tone" value="moon"><span><i class="tone-swatch moon-swatch"></i>静谧蓝月<small>清冷月光，温暖烛火</small></span></label><label><input type="radio" name="tone" value="amber"><span><i class="tone-swatch amber-swatch"></i>琥珀暖夜<small>柔和金色，朦胧旧梦</small></span></label></div><label class="check-label"><input type="checkbox" name="particles"> 萤火微光</label></fieldset><div class="editor-bottom"><button class="editor-submit" type="submit">保存并预览 <span>↗</span></button><button id="share-button" class="editor-share" type="button">生成祝福链接</button><p>草稿保存在当前设备。链接包含祝福内容，请只分享给想送达的人。</p><div id="share-result" hidden><label>专属祝福链接<input id="share-url" readonly aria-label="专属祝福链接"></label><button type="button" id="copy-link" class="editor-share">复制链接</button><small>当前版本为私人预览，在线链接的访问权限取决于网站设置。</small></div></div></form></dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <noscript><div class="noscript">请启用 JavaScript，来拆开这封生日祝福。</div></noscript>
-  <script type="module" src="./app.js"></script>
-</body>
+<body><p>正在进入最新的星愿房间…<br><br><a href="./birthday/">点击进入</a></p></body>
 </html>

@@ -13,3 +13,5 @@
 ## 部署
 
 GitHub 默认分支使用 `main`。Cloudflare Pages 不需要构建命令，输出目录填写 `dist`。完整设置见 [CLOUDFLARE-DEPLOY.md](CLOUDFLARE-DEPLOY.md)。
+
+线上根地址会自动进入当前最新版生日房间 `/birthday/`；其他主题可从 `/collection/` 查看。
