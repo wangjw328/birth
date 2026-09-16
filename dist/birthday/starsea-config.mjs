@@ -9,5 +9,5 @@ export function canExploreStarsea({completed,scene,view,finaleComplete}){
  return completed&&scene==='rings'&&(view==='room'||(view==='ending'&&finaleComplete));
 }
 export function canExploreObservation({completed,scene,view,finaleComplete}){
- return completed&&['rings','aurora'].includes(scene)&&(view==='room'||(view==='ending'&&finaleComplete));
+ return completed&&['rings','aurora','sunset'].includes(scene)&&(view==='room'||(view==='ending'&&finaleComplete));
 }

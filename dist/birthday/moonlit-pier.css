@@ -1,0 +1,17 @@
+#moonlit-pier{position:fixed;inset:0;z-index:101;overflow:hidden;isolation:isolate;background:#0d192d;color:#f8efe2;font-family:var(--sans,system-ui)}
+.pier-view,.pier-render,.pier-render canvas,.pier-entry{position:absolute;inset:0;width:100%;height:100%}.pier-render canvas{display:block}
+.pier-meteor{position:absolute;z-index:2;display:block;width:clamp(65px,8vw,125px);height:2px;opacity:0;pointer-events:none;background:linear-gradient(90deg,transparent 0%,#b8d9f36e 47%,#f5fbff 100%);filter:drop-shadow(0 0 5px #badfff);transform-origin:right center;will-change:transform,opacity}
+.pier-meteor:after{content:'';position:absolute;right:-2px;top:-2px;width:6px;height:6px;border-radius:50%;background:#f5fbff;box-shadow:0 0 11px 3px #c3e2ff80}
+.pier-meteor-one{left:39%;top:8%;animation:pier-meteor-one 17s linear 5s infinite}.pier-meteor-two{left:56%;top:12%;width:clamp(50px,6vw,90px);animation:pier-meteor-two 23s linear 12s infinite}
+@keyframes pier-meteor-one{0%,1%{opacity:0;transform:translate(0,0) rotate(25deg)}3%{opacity:.94}17%{opacity:.75}21%,100%{opacity:0;transform:translate(19vw,11vh) rotate(25deg)}}
+@keyframes pier-meteor-two{0%,1%{opacity:0;transform:translate(0,0) rotate(18deg)}3%{opacity:.7}14%{opacity:.65}18%,100%{opacity:0;transform:translate(14vw,7vh) rotate(18deg)}}
+.pier-entry{z-index:2;pointer-events:none;background:linear-gradient(90deg,#071323c9,transparent 51%),linear-gradient(0deg,#07132375,transparent 40%)}
+.pier-entry-copy{position:absolute;left:5%;bottom:15%;max-width:440px;text-shadow:0 2px 20px #08101e}.pier-entry-copy>span{font-size:10px;letter-spacing:2px;color:#f1cb94}.pier-entry-copy h2{font:400 clamp(30px,3.7vw,52px)/1.35 var(--serif,serif);letter-spacing:2px;margin:13px 0}.pier-entry-copy p{font-size:13px;letter-spacing:.6px;color:#ece3d6}
+#moonlit-pier button{border:1px solid #e9dcc466;border-radius:28px;padding:10px 17px;color:#f8efe2;background:#102034bd;cursor:pointer;backdrop-filter:blur(8px)}
+.pier-enter{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);pointer-events:auto;background:#f3dfbcdf!important;color:#17243a!important;padding:14px 24px!important;white-space:nowrap}
+.pier-top{position:absolute;left:4%;right:17%;top:25px;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:12px}.pier-top>span{font:18px var(--serif,serif);letter-spacing:2px;text-shadow:0 2px 12px #051020}.pier-top nav{display:flex;align-items:center;gap:8px}.pier-top .pier-sound{font-size:12px;color:#f7d8aa;border-color:#ebca9b55}
+#moonlit-pier[data-state=view] .pier-render{transform:scale(1.045)}.pier-render{transform-origin:65% 40%;transition:transform 1.5s cubic-bezier(.22,.7,.16,1)}
+body.pier-active>header,body.pier-active>footer,body.pier-active>.gesture-button,body.pier-active>#hand-preview,body.pier-active>#hand-cursor,body.pier-active>.scene-picker{visibility:hidden}
+@media(max-height:500px) and (orientation:landscape){.pier-entry-copy{left:5%;bottom:19%}.pier-entry-copy h2{font-size:26px}.pier-entry-copy p{font-size:11px}.pier-enter{left:63%;bottom:20%}.pier-top{top:15px;right:19%}.pier-top>span{font-size:15px}.pier-top button{font-size:10px;padding:7px 10px!important}.pier-top nav{gap:5px}}
+@media(prefers-reduced-motion:reduce){.pier-render{transition:none}.pier-meteor{display:none}}
+#moonlit-pier[data-reduced=true] .pier-meteor{display:none}

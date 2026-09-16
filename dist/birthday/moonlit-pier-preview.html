@@ -1,0 +1,6 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d192d"><title>海上月光栈桥 · 独立预览</title><link rel="stylesheet" href="./style.css?v=25"><link rel="stylesheet" href="./moonlit-pier.css?v=29"></head><body><main style="padding:8vw"><h1>海上月光栈桥预览</h1><p>月光、海浪和栈桥灯光的纯观景场景。</p><button id="launch" class="primary">进入海上月光栈桥</button><p><a href="./" style="color:#e9c894">返回生日体验</a></p><label><input type="checkbox" id="reduce"> 减少动态</label></main><script type="module">
+import {MoonlitPierExperience} from './moonlit-pier.js?v=29';
+const reduce=document.querySelector('#reduce');reduce.checked=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const experience=new MoonlitPierExperience({getReduced:()=>reduce.checked,onReturn:()=>document.querySelector('#launch').focus()});
+document.querySelector('#launch').onclick=()=>experience.open();let last=performance.now();function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!document.hidden)experience.update(dt);requestAnimationFrame(frame);}requestAnimationFrame(frame);experience.open();window.addEventListener('pagehide',()=>experience.dispose());
+</script></body></html>

@@ -1,11 +1,12 @@
 import {StarseaExperience} from './starsea.js?v=22';
-import {canExploreObservation} from './starsea-config.mjs?v=21';
+import {canExploreObservation} from './starsea-config.mjs?v=25';
 import {AuroraTerraceExperience} from './aurora-terrace.js?v=24';
+import {MoonlitPierExperience} from './moonlit-pier.js?v=29';
 import {ParticleWish} from './particle-wish.js';
 import {SCENES} from './scene-presets.mjs';
 import {BirthdayJourney} from './journey.mjs';
 const journey=new BirthdayJourney();
-import {BirthdayRoom} from './photographic-room.js?v=11';
+import {BirthdayRoom} from './photographic-room.js?v=12';
 import {FlowMemoryParticles as MemoryParticles} from './flow-particles.js?v=20';
 import {HandControls} from './hands.js?v=3';
 import {WindowFireworks} from './window-fireworks.js?v=11';
@@ -25,15 +26,31 @@ let memories=[
  {type:'audio',title:'有句话，想亲口说',src:'',caption:'生日快乐。愿你在新的一岁，拥有慢慢来、也能走很远的勇气。也愿你知道，总有人，认真地把你放在心上。'},
  {type:'note',title:'写给这一年的你',caption:config.note}
 ];
-let fireworks,finale,starsea,auroraTerrace;const motion=new BirthdayMotion(()=>reduced);let mediaTicket=0;
+let fireworks,finale,starsea,auroraTerrace,moonlitPier;const motion=new BirthdayMotion(()=>reduced);let mediaTicket=0;
 function toast(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3800);}
+const fullscreenButton=$('fullscreen');
+function syncFullscreenButton(){
+ const active=Boolean(document.fullscreenElement);
+ fullscreenButton.setAttribute('aria-label',active?'退出全屏':'进入全屏');
+ fullscreenButton.title=active?'退出全屏':'进入全屏';
+ fullscreenButton.querySelector('span').textContent=active?'退出全屏':'全屏';
+}
+fullscreenButton.addEventListener('click',async()=>{
+ try{
+  if(document.fullscreenElement)await document.exitFullscreen();
+  else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen({navigationUI:'hide'});
+  else{toast('当前浏览器不支持网页全屏。请用浏览器打开，或将网页添加到主屏幕。');return;}
+  syncFullscreenButton();
+ }catch{toast('当前浏览器限制了网页全屏。请用浏览器打开，或将网页添加到主屏幕。');}
+});
+document.addEventListener('fullscreenchange',syncFullscreenButton);
 function stopVoice(){window.speechSynthesis?.cancel();$('voice-player').pause();$('media-audio').classList.remove('playing');$('play-voice').textContent='播放这段留言 ▷';}
 function syncJourney(){
  const guided=!journey.completed||(view==='ending'&&!finale?.complete);
  document.body.dataset.guided=String(guided);
  const starAllowed=canExploreObservation({completed:journey.completed,scene:room?.sceneName,view,finaleComplete:finale?.complete});
  $('explore-starsea').hidden=!(starAllowed&&view==='ending');$('room-starsea').hidden=!(starAllowed&&view==='room');
- const auroraView=room?.sceneName==='aurora';$('explore-starsea').textContent=auroraView?'窗外还有一片极光 ↗':'身后还有一片星海 ↗';$('room-starsea').textContent=auroraView?'推开窗，去极光露台 ↗':'转身，去探索星海 ↗';
+ const observationLabels={aurora:['窗外还有一片极光 ↗','推开窗，去极光露台 ↗'],sunset:['海上有一条月光栈桥 ↗','去海上月光栈桥 ↗'],rings:['身后还有一片星海 ↗','转身，去探索星海 ↗']};const labels=observationLabels[room?.sceneName]||observationLabels.rings;$('explore-starsea').textContent=labels[0];$('room-starsea').textContent=labels[1];
  $('home').disabled=guided;$('replay').hidden=view==='ending'&&!finale?.complete;
  $('customize').hidden=guided&&view!=='entry';
  for(const id of ['room-reset','cake-back','back-room'])$(id).hidden=guided||view==='entry';
@@ -99,14 +116,15 @@ try{
  room=new BirthdayRoom($('room-stage'));await room.ready;room.resize();fireworks=new WindowFireworks(room.scene);finale=new ParticleWish($('particle-wish'),phase=>{document.body.dataset.finale=phase;if(phase!=='fireworks')fireworks.stop();if(phase==='complete')journey.completed=true;syncJourney();$('journey-status').textContent=phase==='fireworks'?'窗前花火正在盛放':phase==='gathering'?'星光正在写下祝福':'旅程完成，可自由回看';$('footer-message').textContent=phase==='complete'?'Happy Birthday '+config.recipient:phase==='gathering'?'每一颗微光，都在拼出你的名字。':'烟花之后，还有一句话想送给你。';});room.setMemories(memories);
  particles=new MemoryParticles($('particle-canvas'),$('photo-orbit'),openMemory);particles.setCards(memories);particles.resize();
  $('low-motion').checked=reduced;applyReduced();$('enter').disabled=false;$('enter-label').textContent='走进今晚的房间';
- function frame(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!document.hidden){if(starsea?.active||auroraTerrace?.active){if(starsea?.root.dataset.state==='loading'||auroraTerrace?.root.dataset.state==='entry')room.update(dt,now/1000);starsea?.update(dt);auroraTerrace?.update(dt);requestAnimationFrame(frame);return;}fireworks.update(dt);finale.update(dt);room.update(dt,now/1000);particles.reading=$('media-dialog').open;particles.update(dt,now/1000);if(view==='room')for(const name of ['memory','cake','window']){const p=room.project(name),el=$('hot-'+name);if(!el.matches(':hover,:focus-visible')){el.style.left=Math.round(p.x)+'px';el.style.top=Math.round(p.y)+'px';}el.style.opacity=p.visible?'1':'0';el.style.pointerEvents=p.visible?'auto':'none';el.tabIndex=p.visible?0:-1;}}requestAnimationFrame(frame);}
+ function frame(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!document.hidden){if(starsea?.active||auroraTerrace?.active||moonlitPier?.active){if(starsea?.root.dataset.state==='loading'||auroraTerrace?.root.dataset.state==='entry'||moonlitPier?.root.dataset.state==='entry')room.update(dt,now/1000);starsea?.update(dt);auroraTerrace?.update(dt);moonlitPier?.update(dt);requestAnimationFrame(frame);return;}fireworks.update(dt);finale.update(dt);room.update(dt,now/1000);particles.reading=$('media-dialog').open;particles.update(dt,now/1000);if(view==='room')for(const name of ['memory','cake','window']){const p=room.project(name),el=$('hot-'+name);if(!el.matches(':hover,:focus-visible')){el.style.left=Math.round(p.x)+'px';el.style.top=Math.round(p.y)+'px';}el.style.opacity=p.visible?'1':'0';el.style.pointerEvents=p.visible?'auto':'none';el.tabIndex=p.visible?0:-1;}}requestAnimationFrame(frame);}
  requestAnimationFrame(frame);
 }catch(e){console.error(e);$('fatal').hidden=false;$('enter-label').textContent='房间暂时无法打开';}
 const beforeObservation=async()=>{stopVoice();stopHold();hands.stop();document.body.classList.remove('hand-active');$('gesture-label').firstChild.textContent='开启手势';if(view!=='room')await go('room');room.setView('room');};
 const afterObservation=()=>{syncJourney();$('room-starsea').focus();};
 starsea=new StarseaExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation});
 auroraTerrace=new AuroraTerraceExperience({getReduced:()=>reduced,getName:()=>config.recipient,beforeOpen:beforeObservation,onReturn:afterObservation});
-const openObservation=()=>{if(motion.busy||!canExploreObservation({completed:journey.completed,scene:room?.sceneName,view,finaleComplete:finale?.complete}))return;(room.sceneName==='aurora'?auroraTerrace:starsea).open();};
+moonlitPier=new MoonlitPierExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation});
+const openObservation=()=>{if(motion.busy||!canExploreObservation({completed:journey.completed,scene:room?.sceneName,view,finaleComplete:finale?.complete}))return;({aurora:auroraTerrace,sunset:moonlitPier,rings:starsea}[room.sceneName])?.open();};
 $('explore-starsea').onclick=openObservation;$('room-starsea').onclick=openObservation;
 $('enter').onclick=()=>go('room');$('home').onclick=()=>go('entry');$('room-reset').onclick=()=>go('room');
 $('hot-window').onclick=()=>go('window');$('hot-cake').onclick=()=>go('cake');$('hot-memory').onclick=()=>{setSpread(0);go('memory');};
@@ -149,7 +167,7 @@ sceneToggle.onclick=()=>{
  scenePicker.classList.toggle('expanded',expanded);sceneToggle.setAttribute('aria-expanded',String(expanded));
 };
 document.querySelectorAll('.scene-picker [data-scene]').forEach(button=>button.onclick=async()=>{
- if(starsea?.active||auroraTerrace?.active||!room||motion.busy||room.igniting||(!journey.completed&&view!=='entry'&&view!=='room'))return;const request=++sceneRequest;
+ if(starsea?.active||auroraTerrace?.active||moonlitPier?.active||!room||motion.busy||room.igniting||(!journey.completed&&view!=='entry'&&view!=='room'))return;const request=++sceneRequest;
  document.querySelector('.scene-picker').classList.add('loading');
  try{const changed=await room.setScene(button.dataset.scene);if(request!==sceneRequest||!changed)return;
  document.querySelectorAll('.scene-picker [data-scene]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
@@ -180,7 +198,7 @@ $('gesture-toggle').onclick=async()=>{
 };
 window.addEventListener('pointermove',e=>{if(room&&!$('settings').open)room.mouse={x:(e.clientX/innerWidth-.5)*2,y:-(e.clientY/innerHeight-.5)*2};});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopHold();stopVoice();room?.cancelIgnition();if(view==='cake'&&!wishDone)updateCakeUI();audioContext?.suspend();mediaEditor.stopRecording();if(hands.active){hands.stop();status('页面离开后摄像头已关闭，需要时可重新开启。');}}else if(soundOn)audioContext?.resume().catch(()=>{});});
-window.addEventListener('pagehide',()=>{starsea?.dispose();auroraTerrace?.dispose();hands.dispose();mediaEditor.dispose();stopVoice();audioContext?.close();});
+window.addEventListener('pagehide',()=>{starsea?.dispose();auroraTerrace?.dispose();moonlitPier?.dispose();hands.dispose();mediaEditor.dispose();stopVoice();audioContext?.close();});
 
 syncJourney();
 
