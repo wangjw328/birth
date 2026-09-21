@@ -27,6 +27,6 @@ export function setupMediaEditor({getMemories,setMemories,config,toast,onSave,be
    recordTimer=setInterval(()=>{const seconds=Math.floor((Date.now()-recordStart)/1000);$('record-status').textContent=`正在录音 ${seconds} 秒 / 60 秒`;if(seconds>=60)stopRecording();},250);
   }catch{stopRecording();toast('麦克风未开启，可以上传已经录好的音频。');}finally{$('record').disabled=false;}
  };
- $('settings-form').onsubmit=e=>{e.preventDefault();if(!$('recipient-input').value.trim()){$('recipient-input').focus();return;}config.recipient=$('recipient-input').value.trim();config.message=$('message-input').value.trim()||'愿你永远有热爱，也有被爱的底气。';config.note=$('note-input').value.trim()||'新的一岁，请记得好好爱自己。';setMemories(getMemories().map(m=>m.type==='note'?{...m,caption:config.note}:m));$('settings').close();onSave();toast('你的心意，已经放进房间。');};
+ $('settings-form').onsubmit=e=>{e.preventDefault();if(!$('recipient-input').value.trim()){$('recipient-input').focus();return;}config.entryTitle=$('entry-title-input').value.trim()||'今晚的星光，\n都为你而来。';config.footerText=$('footer-text-input').value.trim()||'一间房，一场只属于你的生日。';config.recipient=$('recipient-input').value.trim();config.message=$('message-input').value.trim()||'愿你永远有热爱，也有被爱的底气。';config.note=$('note-input').value.trim()||'新的一岁，请记得好好爱自己。';setMemories(getMemories().map(m=>m.type==='note'?{...m,caption:config.note}:m));$('settings').close();onSave();toast('你的心意，已经放进房间。');};
  return {stopRecording,dispose(){disposed=true;loadGeneration++;stopRecording();photoUrls.forEach(URL.revokeObjectURL);if(audioUrl)URL.revokeObjectURL(audioUrl);}};
 }

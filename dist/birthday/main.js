@@ -3,22 +3,22 @@ import {canExploreObservation} from './starsea-config.mjs?v=25';
 import {AuroraTerraceExperience} from './aurora-terrace.js?v=24';
 import {MoonlitPierExperience} from './moonlit-pier.js?v=29';
 import {ParticleWish} from './particle-wish.js';
-import {SCENES} from './scene-presets.mjs';
+import {SCENES} from './scene-presets.mjs?v=30';
 import {BirthdayJourney} from './journey.mjs';
 const journey=new BirthdayJourney();
-import {BirthdayRoom} from './photographic-room.js?v=12';
+import {BirthdayRoom} from './photographic-room.js?v=13';
 import {FlowMemoryParticles as MemoryParticles} from './flow-particles.js?v=20';
-import {HandControls} from './hands.js?v=3';
+import {HandControls} from './hands.js?v=4';
 import {WindowFireworks} from './window-fireworks.js?v=11';
 import {BirthdayMotion} from './birthday-motion.js';
-import {setupMediaEditor} from './media-editor.js';
+import {setupMediaEditor} from './media-editor.js?v=2';
 const $=id=>document.getElementById(id);
 let room,particles,view='entry',last=performance.now(),toastTimer,selected=0;
 let lastPinch=0,lastGesture='',gestureX=.5,gestureY=.5;
 let holding=false,holdSource='pointer',holdStart=0,holdFrame=0,wishDone=false,completionTimer=0;
 let soundOn=false,audioContext=null,masterGain=null;
 let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const config={recipient:'亲爱的你',message:'愿你永远有热爱，也有被爱的底气。',note:'这一年，你已经做得很好了。接下来的日子，也请记得把温柔留给自己。'};
+const config={entryTitle:'今晚的星光，\n都为你而来。',footerText:'一间房，一场只属于你的生日。',recipient:'亲爱的你',message:'愿你永远有热爱，也有被爱的底气。',note:'这一年，你已经做得很好了。接下来的日子，也请记得把温柔留给自己。'};
 let memories=[
  {type:'photo',title:'一起等过的极光',src:'./assets/aurora.png',caption:'示例风景 · 换成你们自己的照片，这里就有了特别的意义。'},
  {type:'photo',title:'某个安静的夜晚',src:'../assets/garden.webp',caption:'示例风景 · 那些看似平凡的日子，其实一直在发光。'},
@@ -77,7 +77,7 @@ function go(next){
  if(next==='entry'){room.setLit(false);wishDone=false;}if(next==='cake')updateCakeUI();
  const progress=next==='memory'?1:['cake','ending'].includes(next)?2:0;
  document.querySelectorAll('.view-dots i').forEach((el,i)=>el.classList.toggle('active',i===progress));
- $('footer-message').textContent=({entry:'一间房，一场只属于你的生日。',room:'点选发光物件，发现藏起来的心意。',window:SCENES[room.sceneName].description,memory:'每一颗微光，都藏着一个瞬间。',cake:'愿这一束光，照亮新的一岁。',ending:'烟花之后，还有一句话想送给你。'})[next];lastGesture='';syncJourney();
+ $('footer-message').textContent=({entry:config.footerText,room:'点选发光物件，发现藏起来的心意。',window:SCENES[room.sceneName].description,memory:'每一颗微光，都藏着一个瞬间。',cake:'愿这一束光，照亮新的一岁。',ending:'烟花之后，还有一句话想送给你。'})[next];lastGesture='';syncJourney();
  });
 }
 function updateCakeUI(){
@@ -150,7 +150,7 @@ $('play-voice').onclick=()=>{
  utterance.onend=utterance.onerror=()=>{$('media-audio').classList.remove('playing');$('play-voice').textContent='再听一次 ▷';};
  speechSynthesis.speak(utterance);$('media-audio').classList.add('playing');$('play-voice').textContent='停止留言 Ⅱ';
 };
-const mediaEditor=setupMediaEditor({setMemories:value=>{stopVoice();memories=value;journey.seen.clear();particles.setCards(memories);room.setMemories(memories);},config,toast,onSave:()=>{$('name-display').textContent=config.recipient;$('ending-text').textContent=config.message;applyReduced();syncJourney();if(view!=='entry')go('room');},beforeOpen:()=>{stopHold();stopVoice();room?.cancelIgnition();if(view==='cake'&&!wishDone)updateCakeUI();}});
+const mediaEditor=setupMediaEditor({getMemories:()=>memories,setMemories:value=>{stopVoice();memories=value;journey.seen.clear();particles.setCards(memories);room.setMemories(memories);},config,toast,onSave:()=>{$('entry-title').textContent=config.entryTitle;$('footer-message').textContent=view==='entry'?config.footerText:$('footer-message').textContent;$('name-display').textContent=config.recipient;$('ending-text').textContent=config.message;applyReduced();syncJourney();if(view!=='entry')go('room');},beforeOpen:()=>{stopHold();stopVoice();room?.cancelIgnition();if(view==='cake'&&!wishDone)updateCakeUI();}});
 for(const dialog of [$('settings'),$('media-dialog')])dialog.addEventListener('click',e=>{if(e.target!==dialog)return;const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){if(dialog.id==='media-dialog'){mediaTicket++;motion.close(dialog);}else dialog.close();}});
 async function toggleSound(){
  try{if(!audioContext){audioContext=new AudioContext();masterGain=audioContext.createGain();masterGain.gain.value=0;masterGain.connect(audioContext.destination);for(const [i,f]of [130.81,196,261.63,329.63].entries()){const o=audioContext.createOscillator(),g=audioContext.createGain();o.frequency.value=f;g.gain.value=.045/(i+1);o.connect(g);g.connect(masterGain);o.start();}}
@@ -192,6 +192,8 @@ const hands=new HandControls($('hand-video'),data=>{
  if(data.stable&&data.pinch&&lastGesture!=='pinch'&&data.timestamp-lastPinch>850){lastPinch=data.timestamp;let target=document.elementFromPoint(x,y)?.closest('button');if(!target){let nearest=65;for(const button of document.querySelectorAll('button')){const r=button.getBoundingClientRect();if(!r.width||!r.height||getComputedStyle(button).visibility==='hidden'||button.closest('[hidden]')||button.getAttribute('aria-hidden')==='true')continue;const distance=Math.hypot(Math.max(r.left-x,0,x-r.right),Math.max(r.top-y,0,y-r.bottom));if(distance<nearest){nearest=distance;target=button;}}}if(target&&target!==$('gesture-toggle')&&!target.disabled){target.click();}else if(view==='cake'&&!room.lit){const p=room.project('cake');if(Math.hypot(p.x-x,p.y-y)<130)lightCandle();}}
  if(data.stable)lastGesture=data.name;
 },status);
+const network=navigator.connection;
+if(!network?.saveData&&!/2g/.test(network?.effectiveType||''))setTimeout(()=>hands.prepare().catch(()=>{}),2600);
 $('gesture-toggle').onclick=async()=>{
  if(hands.active||hands.loading){hands.stop();document.body.classList.remove('hand-active');$('gesture-label').firstChild.textContent='开启手势';$('gesture-status').hidden=true;$('camera-help').hidden=true;return;}
  $('gesture-label').firstChild.textContent='准备手势…';try{await hands.start();if(hands.active){document.body.classList.add('hand-active');$('gesture-label').firstChild.textContent='关闭手势';}}catch{$('gesture-label').firstChild.textContent='开启手势';}
