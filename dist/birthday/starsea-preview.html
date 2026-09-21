@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>飞船星海 · 独立预览</title><link rel="stylesheet" href="./style.css?v=23"><link rel="stylesheet" href="./starsea.css?v=22"></head><body><main style="padding:8vw"><h1>飞船星海预览</h1><p style="margin:25px 0">这里直接体验观星入口、星球聚焦、配色和星球放大。</p><button id="launch" class="primary">进入观星入口</button><p style="margin-top:25px"><a href="./" style="color:#d8bd88">返回完整生日体验</a></p><label style="display:block;margin-top:20px"><input type="checkbox" id="reduce"> 减少动态</label></main><script type="module">
+import {StarseaExperience} from './starsea.js?v=21';
+const reduced=document.querySelector('#reduce');reduced.checked=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const experience=new StarseaExperience({getReduced:()=>reduced.checked,onReturn:()=>document.querySelector('#launch').focus()});
+document.querySelector('#launch').onclick=()=>experience.open();let last=performance.now();function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!document.hidden)experience.update(dt);requestAnimationFrame(frame);}requestAnimationFrame(frame);experience.open();window.addEventListener('pagehide',()=>experience.dispose());
+</script></body></html>
+
+
+

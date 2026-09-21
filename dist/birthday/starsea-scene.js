@@ -1,5 +1,5 @@
 import {planetMaterial} from './planet-appearance.js?v=17';
-import {CosmicPhenomena} from './cosmic-phenomena.js?v=17';
+import {CosmicPhenomena} from './cosmic-phenomena.js?v=18';
 import * as T from './vendor/three.module.js';
 import {STARSEA_CONFIG as defaults,STARSEA_PALETTES} from './starsea-config.mjs?v=17';
 
@@ -30,26 +30,19 @@ export class StarseaScene{
   this.setPalette('silver');this.resize();
  }
  buildBackdrop(){
-  this.backMaterial=new T.ShaderMaterial({side:T.BackSide,depthTest:false,depthWrite:false,uniforms:{base:{value:new T.Color('#182631')},strength:{value:this.config.backgroundStrength},shift:{value:new T.Vector2()}},vertexShader:`varying vec2 uvp;varying vec3 worldDirection;void main(){uvp=uv;worldDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`
-   varying vec2 uvp;varying vec3 worldDirection;uniform vec3 base;uniform float strength;uniform vec2 shift;
-   float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-   float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
-   float fbm(vec2 p){float n=0.,a=.5;for(int i=0;i<4;i++){n+=noise(p)*a;p=mat2(.8,-.6,.6,.8)*p*2.04+3.7;a*=.5;}return n;}
-   void main(){vec3 d=normalize(worldDirection);vec2 p=d.xz*3.+d.y;float cloud=fbm(p*3.+vec2(2.,4.));float band=exp(-pow((d.y-.32*d.x)*5.,2.));float lanes=fbm(p*12.);vec3 color=base*(.28+cloud*.32);vec3 silver=vec3(.10,.092,.079);color+=silver*strength*band*(.2+pow(cloud,1.8))*(.35+lanes);gl_FragColor=vec4(color,1.);
-#include <colorspace_fragment>
-}
-  `});
-  this.backdrop=new T.Mesh(new T.SphereGeometry(125,48,32),this.backMaterial);this.backdrop.frustumCulled=false;this.backdrop.renderOrder=-100;this.scene.add(this.backdrop);
+  this.backTexture=new T.TextureLoader().load('./assets/observatory-milkyway-v1.png');this.backTexture.colorSpace=T.SRGBColorSpace;
+  this.backMaterial=new T.MeshBasicMaterial({map:this.backTexture,depthTest:false,depthWrite:false,fog:false,toneMapped:false});
+  this.backdrop=new T.Mesh(new T.PlaneGeometry(2,2),this.backMaterial);this.backdrop.position.set(0,0,-100);this.backdrop.frustumCulled=false;this.backdrop.renderOrder=-100;this.camera.add(this.backdrop);this.scene.add(this.camera);
  }
  buildDust(){
   const count=Math.min(innerWidth,innerHeight)<650?this.config.mobileParticles:this.config.desktopParticles;this.dustCount=count;
   const positions=new Float32Array(count*3),colors=new Float32Array(count*3),sizes=new Float32Array(count);
   let seed=7123;const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   for(let i=0;i<count;i++){
-   const ambient=i>count*.62;const r=Math.pow(random(),1.25),a=random()*Math.PI*2;
+   const ambient=i>count*.56;const r=Math.pow(random(),1.25),a=random()*Math.PI*2;
    if(ambient){
-    const az=random()*Math.PI*2,vertical=random()*2-1,rad=40+random()*70;
-    const side=Math.sqrt(1-vertical*vertical);positions[i*3]=Math.cos(az)*side*rad;positions[i*3+1]=vertical*rad;positions[i*3+2]=Math.sin(az)*side*rad;
+    if(i%3===0){positions[i*3]=(random()*2-1)*34;positions[i*3+1]=(random()*2-1)*22;positions[i*3+2]=4+random()*30;}
+    else{const az=random()*Math.PI*2,vertical=random()*2-1,rad=40+random()*70;const side=Math.sqrt(1-vertical*vertical);positions[i*3]=Math.cos(az)*side*rad;positions[i*3+1]=vertical*rad;positions[i*3+2]=Math.sin(az)*side*rad;}
    }else{
     const x=Math.cos(a)*r*this.config.width/2;
     positions[i*3]=x;positions[i*3+1]=x*.32+(random()+random()+random()-1.5)*(i%3===0?.38:1.2+r*2.8);positions[i*3+2]=Math.sin(a)*r*this.config.depth/2;
@@ -88,12 +81,12 @@ export class StarseaScene{
  }
  setPalette(name){
   const palette=STARSEA_PALETTES[name];if(!palette)return;this.palette=name;
-  this.phenomena.setPalette(palette.accent);this.backMaterial.uniforms.base.value.set(palette.background);this.scene.fog.color.set(palette.background);
+  this.phenomena.setPalette(palette.accent);this.scene.fog.color.set(palette.background);
   const base=new T.Color(palette.dust),accent=new T.Color(palette.accent),colors=this.dustGeometry.attributes.color;
   for(let i=0;i<this.dustCount;i++){const c=i%6===0?accent:base,brightness=.55+(i%19)/22;colors.setXYZ(i,c.r*brightness,c.g*brightness,c.b*brightness);}colors.needsUpdate=true;
   [...this.nodes,...this.satellites].forEach(node=>{node.material.uniforms.accent.value.set(palette.accent);for(const child of node.children)if(child.userData.planetRing)child.material.uniforms.tint.value.set(palette.accent);});this.orbits.forEach(orbit=>orbit.material.color.set(palette.accent));
  }
- resize(){this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(innerWidth,innerHeight);if(!this.flight){if(this.selected<0)this.overview(true);else this.focus(this.selected,true,this.focusAnchor);}}
+ resize(){this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(innerWidth,innerHeight);const height=2*Math.tan(T.MathUtils.degToRad(this.camera.fov/2))*100;this.backdrop.scale.set(height*this.camera.aspect*1.08,height*1.08,1);if(!this.flight){if(this.selected<0)this.overview(true);else this.focus(this.selected,true,this.focusAnchor);}}
  destination(index){
   if(index<0)return {camera:new T.Vector3(0,2.8,innerWidth<innerHeight?58:43),aim:new T.Vector3(0,0,0)};
   const node=this.focusAnchor||this.nodes[index],p=node.position.clone(),distance=this.config.focusDistance*(node.geometry.parameters.radius/this.config.nodeRadius);
@@ -113,9 +106,9 @@ export class StarseaScene{
   if(this.flight){const f=this.flight;f.elapsed+=dt;const t=Math.min(1,f.elapsed/f.duration),e=t*t*t*(t*(t*6.-15.)+10.);this.baseCamera.lerpVectors(f.startCamera,f.camera,e);this.aim.lerpVectors(f.startAim,f.aim,e);if(t===1){this.flight=null;this.onBusy?.(false);this.onFocus?.(f.index);}}
   if(this.reduced)this.drift.set(0,0);else this.drift.lerp(this.pointer,1-Math.exp(-dt*2.8));
   const amount=this.selected<0?5.2:.12;this.camera.position.copy(this.baseCamera);this.camera.position.x+=this.drift.x*amount;this.camera.position.y-=this.drift.y*amount*.65;this.camera.lookAt(this.aim);
-  this.phenomena.update(this.time,this.reduced,this.selected>=0);this.backMaterial.uniforms.shift.value.set(this.drift.x*.008,this.drift.y*.006);this.renderer.render(this.scene,this.camera);
+  this.phenomena.update(this.time,this.reduced,this.selected>=0);this.backdrop.position.x=this.drift.x*3.4;this.backdrop.position.y=-this.drift.y*2.2;this.renderer.render(this.scene,this.camera);
  }
- dispose(){this.active=false;this.events.abort();this.clearNodes();this.phenomena.dispose();for(const object of [this.dust,this.backdrop]){object.geometry.dispose();object.material.dispose();}this.renderer.dispose();this.renderer.domElement.remove();}
+ dispose(){this.active=false;this.events.abort();this.clearNodes();this.phenomena.dispose();for(const object of [this.dust,this.backdrop]){object.geometry.dispose();object.material.dispose();}this.backTexture?.dispose();this.renderer.dispose();this.renderer.domElement.remove();}
 }
 
 

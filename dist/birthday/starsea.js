@@ -28,7 +28,7 @@ export class StarseaExperience{
  async enter(){
   if(this.busy||!this.active)return;this.busy=true;const ticket=this.ticket;this.$('.starsea-enter').disabled=true;this.$('.starsea-status').textContent='正在展开星海…';
   try{
-   if(!this.scene){const {StarseaScene}=await import('./starsea-scene.js?v=17');if(ticket!==this.ticket)return;this.scene=new StarseaScene(this.stage,{reduced:this.getReduced(),onFocus:index=>this.showFocus(index),onBusy:value=>this.setBusy(value),onError:message=>{this.scene?.dispose();this.scene=null;this.$('.starsea-status').textContent=message;}});}
+   if(!this.scene){const {StarseaScene}=await import('./starsea-scene.js?v=21');if(ticket!==this.ticket)return;this.scene=new StarseaScene(this.stage,{reduced:this.getReduced(),onFocus:index=>this.showFocus(index),onBusy:value=>this.setBusy(value),onError:message=>{this.scene?.dispose();this.scene=null;this.$('.starsea-status').textContent=message;}});}
    this.scene.reduced=this.getReduced();this.scene.setPlanets();this.scene.setPalette(this.palette);this.scene.active=true;this.stage.hidden=false;this.scene.resize();this.setBusy(true);this.root.dataset.state='entering';
    await this.rear.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(1.8)',filter:'blur(9px)'}],{duration:this.getReduced()?150:1500,easing:'cubic-bezier(.22,.7,.16,1)'}).finished;
    if(ticket!==this.ticket)return;this.rear.hidden=true;this.ui.hidden=false;this.$('.starsea-overview').hidden=false;this.root.dataset.state='galaxy';this.$('.starsea-status').textContent='';this.setBusy(false);this.$('.starsea-overview').focus();

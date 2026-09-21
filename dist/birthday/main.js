@@ -1,4 +1,4 @@
-import {StarseaExperience} from './starsea.js?v=22';
+import {StarseaExperience} from './starsea.js?v=24';
 import {canExploreObservation} from './starsea-config.mjs?v=25';
 import {AuroraTerraceExperience} from './aurora-terrace.js?v=24';
 import {MoonlitPierExperience} from './moonlit-pier.js?v=29';
