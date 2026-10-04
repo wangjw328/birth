@@ -1,0 +1,17 @@
+html.needs-install,html.needs-install body{min-height:100%;background:#09101c;color:#f3e9d8}
+html.needs-install body>*:not(#install-gate){display:none!important}
+#install-gate{display:none}
+html.needs-install #install-gate{display:grid;min-height:100dvh;box-sizing:border-box;padding:clamp(24px,5vw,56px);place-items:center;overflow:auto;background:radial-gradient(ellipse at 70% 12%,#214653 0%,transparent 39%),radial-gradient(ellipse at 9% 88%,#49362d 0%,transparent 44%),#09101c;font-family:"Noto Serif SC","Songti SC",serif}
+.install-card{position:relative;width:min(100%,590px);padding:clamp(28px,6vw,56px);box-sizing:border-box;border:1px solid rgba(219,184,128,.36);border-radius:28px;background:linear-gradient(130deg,rgba(22,33,46,.93),rgba(9,16,29,.96));box-shadow:0 34px 90px rgba(0,0,0,.36)}
+.install-card::after{content:"✧";position:absolute;right:9%;top:5%;font-size:clamp(80px,18vw,150px);line-height:1;color:rgba(224,189,130,.1);pointer-events:none}
+.install-kicker{color:#e5be85;font:600 11px/1.5 system-ui,sans-serif;letter-spacing:.26em}
+.install-card h1{max-width:11em;margin:28px 0 14px;font-weight:400;font-size:clamp(30px,5vw,48px);line-height:1.38;letter-spacing:.05em}
+.install-card p{margin:0;color:#cec8c4;font:15px/1.8 system-ui,sans-serif}
+.install-card h2{margin:34px 0 18px;color:#f0dfbd;font-size:20px;font-weight:400}
+.install-card ol{display:grid;gap:18px;list-style:none;counter-reset:step;padding:0;margin:0}
+.install-card li{display:flex;align-items:flex-start;gap:16px;color:#f3e9d8;font:16px/1.6 system-ui,sans-serif}
+.install-card li::before{counter-increment:step;content:counter(step,decimal-leading-zero);flex:none;color:#e8c288;font:13px/2 system-ui,sans-serif;letter-spacing:.08em}
+.install-card #install-note{margin-top:28px;color:#b4bbb9;font-size:13px}
+#install-action{margin-top:24px;border:1px solid #dbba86;border-radius:999px;padding:13px 23px;background:#e5be85;color:#17202a;font:600 15px system-ui,sans-serif}
+#install-action[hidden]{display:none}
+@media(max-height:500px) and (orientation:landscape){html.needs-install #install-gate{padding:12px}.install-card{width:min(100%,950px);padding:16px 26px;display:grid;grid-template-columns:1fr 1.2fr;gap:2px 30px}.install-card h1{margin:8px 0;font-size:25px}.install-card h2{grid-column:2;grid-row:1;margin:0;font-size:16px}.install-card ol{grid-column:2;grid-row:2 / span 3;gap:5px}.install-card li{font-size:13px}.install-card #install-note{grid-column:1 / -1;margin-top:4px;font-size:11px}}

@@ -11,3 +11,31 @@ body.aurora-active>header,body.aurora-active>footer,body.aurora-active>.gesture-
 .aurora-stage{z-index:1}.aurora-entry{z-index:2;pointer-events:none}.aurora-entry>img{visibility:hidden}.aurora-entry button{pointer-events:auto}.aurora-webgl{mix-blend-mode:normal;z-index:1}.aurora-stage>img{visibility:hidden}.aurora-stage:after{z-index:2;background:linear-gradient(0deg,#02080f80,transparent 30%)}.aurora-constellation{z-index:3}.aurora-entry:after{background:linear-gradient(90deg,#02080f55,transparent 55%)}
 #aurora-terrace[data-state=entry] .aurora-constellation{pointer-events:none}.aurora-webgl{transform:scale(1);transform-origin:65% 42%;transition:transform 1.8s cubic-bezier(.22,.7,.16,1)}#aurora-terrace[data-state=terrace] .aurora-webgl{transform:scale(1.045)}
 @media(max-height:500px) and (orientation:landscape){.aurora-entry-copy{bottom:20%;left:5%}.aurora-entry-copy h2{font-size:25px;line-height:1.3}.aurora-entry-copy p{font-size:11px}.aurora-top{top:15px}.aurora-guide{bottom:17px;left:25%;right:17%;font-size:10px}.aurora-palette{bottom:14px;padding:7px 10px}.aurora-enter{left:63%;bottom:21%}}
+
+/* The brass ring is part of the terrace, so guidance and controls stay on its surface. */
+.aurora-stage{transform-origin:55% 75%;transition:transform 750ms cubic-bezier(.22,.7,.16,1)}
+#aurora-terrace[data-state=align] .aurora-stage{transform:scale(1.035)}
+.aurora-dial{position:absolute;z-index:4;transform:translate(-50%,-50%);border:0!important;background:transparent!important;padding:0!important;border-radius:50%!important;touch-action:none;cursor:grab;opacity:0;pointer-events:none;transition:opacity 500ms}
+#aurora-terrace[data-state=terrace] .aurora-dial,#aurora-terrace[data-state=align] .aurora-dial{opacity:1;pointer-events:auto}
+.aurora-dial:active{cursor:grabbing}
+.aurora-dial:focus-visible{outline:2px solid #f4d294;outline-offset:4px}
+.aurora-dial-edge{position:absolute;inset:6% 4%;border:1px solid #f9d89688;border-radius:50%;box-shadow:0 0 18px #f7cf6680,inset 0 0 18px #f7cf6638;animation:aurora-dial-breathe 3.8s ease-in-out infinite}
+.aurora-dial-stars{position:absolute;inset:0;pointer-events:none}
+.aurora-dial-star,.aurora-dial-light{position:absolute;display:block;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none}
+.aurora-dial-star{width:clamp(8px,1.1vw,13px);height:clamp(8px,1.1vw,13px);background:#b99761;border:1px solid #f4d39b;box-shadow:0 0 0 5px #e3bd7130,0 0 12px #f9d28582;transition:background 260ms,box-shadow 260ms,scale 260ms}
+.aurora-dial-star.is-lit{background:#fff9d9;scale:1.3;box-shadow:0 0 0 8px #f9dda335,0 0 24px #fff1a7,0 0 36px #85dbe5}
+.aurora-dial-light{width:clamp(17px,2vw,26px);height:clamp(17px,2vw,26px);background:radial-gradient(circle,#fffdf0 0 18%,#f5d99d 30%,#abdea8 46%,transparent 74%);filter:drop-shadow(0 0 13px #fff0a8);transition:left 85ms linear,top 85ms linear}
+.aurora-sparks{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+.aurora-rising-mote{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff2bf;box-shadow:0 0 9px #fee1a8,0 0 16px #80e1d2;animation:aurora-mote-rise 1.7s cubic-bezier(.2,.65,.2,1) forwards}
+.aurora-guide{left:32%;right:23%;bottom:4%;font-size:14px;line-height:1.45;pointer-events:none;transition:opacity 350ms}
+.aurora-palette{bottom:3%;padding:5px 8px;gap:4px;background:#06111b94}
+.aurora-palette button{width:44px;height:44px;padding:0!important;background:transparent!important;border:0!important;display:grid;place-items:center;box-shadow:none!important}
+.aurora-palette button:after{content:'';display:block;width:18px;height:18px;border-radius:50%;background:var(--swatch);border:2px solid #e6e7e4a8;box-shadow:0 0 10px var(--swatch)}
+.aurora-palette button[aria-pressed=true]:after{outline:2px solid var(--swatch);outline-offset:4px}
+.aurora-palette button:focus-visible{outline:2px solid #f4d294;outline-offset:1px}
+#aurora-terrace[data-state=entry] .aurora-palette,#aurora-terrace[data-state=entry] .aurora-guide{opacity:0;pointer-events:none}
+@keyframes aurora-dial-breathe{50%{box-shadow:0 0 29px #f7cf66a3,inset 0 0 24px #f7cf6655}}
+@keyframes aurora-mote-rise{0%{opacity:0;transform:translate(0,0) scale(.4)}17%{opacity:1}100%{opacity:0;transform:translate(var(--drift),-36vh) scale(.3)}}
+@media(max-width:650px){.aurora-guide{left:25%;right:20%;font-size:14px}.aurora-palette{left:12px}}
+@media(max-height:500px) and (orientation:landscape){.aurora-guide{left:29%;right:20%;bottom:3%;font-size:14px}.aurora-palette{bottom:2%;padding:2px 5px}.aurora-palette button{width:44px;height:44px}}
+@media(prefers-reduced-motion:reduce){.aurora-stage,.aurora-dial,.aurora-dial-light{transition:none!important}.aurora-dial-edge{animation:none}.aurora-rising-mote{animation:none}}

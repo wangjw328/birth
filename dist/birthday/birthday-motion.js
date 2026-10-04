@@ -8,12 +8,25 @@ export class BirthdayMotion {
    await enter.finished;
   }finally{out.cancel();main.inert=false;this.busy=false;}
  }
- open(dialog,source){this.source=source;const origin=source?.getBoundingClientRect();dialog.showModal();const r=dialog.getBoundingClientRect();const from=origin?`translate(${origin.x+origin.width/2-r.x-r.width/2}px,${origin.y+origin.height/2-r.y-r.height/2}px) scale(${Math.max(.18,origin.width/r.width)})`:'translateY(20px) scale(.9)';
+ open(dialog,source,type){this.source=source;const origin=source?.getBoundingClientRect();dialog.showModal();const r=dialog.getBoundingClientRect();const from=origin?`translate(${origin.x+origin.width/2-r.x-r.width/2}px,${origin.y+origin.height/2-r.y-r.height/2}px) scale(${Math.max(.18,origin.width/r.width)})`:'translateY(20px) scale(.9)';
   dialog.animate([{opacity:0,transform:this.reduced()?'none':from},{opacity:1,transform:'none'}],{duration:this.reduced()?160:580,easing:ease});
+  if(!this.reduced())this.reveal(dialog.querySelector('#media-content'),type);
+ }
+ reveal(content,type){
+  const target=type==='photo'?content.querySelector('#media-photo'):type==='audio'?content.querySelector('#media-audio'):content;
+  if(!target)return;
+  const from=type==='note'?'translateY(17px) rotateX(-8deg)':type==='photo'?'translateY(14px) scale(.93) rotate(-2deg)':'translateY(12px) scale(.96)';
+  target.animate([{opacity:0,transform:from},{opacity:1,transform:'none'}],{duration:type==='note'?960:790,delay:170,easing:ease,fill:'backwards'});
+  if(type==='note')this.revealLetter(content,410);
+ }
+ revealLetter(content,delay=120){
+  const letter=content.querySelector('#media-caption');if(!letter||this.reduced())return;
+  letter.animate([{opacity:.15,clipPath:'inset(0 0 95% 0)'},{opacity:1,clipPath:'inset(0 0 0 0)'}],{duration:1250,delay,easing:'cubic-bezier(.28,.65,.22,1)',fill:'backwards'});
  }
  flip(content,commit,direction){this.animations.forEach(a=>a.cancel());this.ghost?.remove();const ghost=content.cloneNode(true);ghost.removeAttribute('id');ghost.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));ghost.querySelectorAll('audio').forEach(el=>el.remove());ghost.inert=true;ghost.setAttribute('aria-hidden','true');ghost.className='media-page-ghost';content.after(ghost);this.ghost=ghost;commit();
   const short=this.reduced(),duration=short?150:620;
-  const entry=content.animate([{opacity:0,transform:short?'none':`perspective(900px) translateX(${direction*40}px) rotateY(${direction*6}deg)`},{opacity:1,transform:'none'}],{duration,easing:ease});
+  if(!short&&content.parentElement.closest('[data-memory-type="note"]'))this.revealLetter(content,170);
+  const entry=content.animate([{opacity:0,transform:short?'none':content.parentElement.closest('[data-memory-type="note"]')?`perspective(900px) translateX(${direction*30}px) rotateX(-7deg)`:`perspective(900px) translateX(${direction*40}px) rotateY(${direction*6}deg)`},{opacity:1,transform:'none'}],{duration,easing:ease});
   const exit=ghost.animate([{opacity:1},{opacity:0,transform:short?'none':`translateX(${-direction*40}px) scale(.97)`}],{duration,easing:ease,fill:'forwards'});this.animations=[entry,exit];exit.finished.catch(()=>{}).finally(()=>ghost.remove());
  }
  async close(dialog){if(!dialog.open||this.closing)return;this.closing=true;const a=dialog.animate([{opacity:1},{opacity:0,transform:this.reduced()?'none':'translateY(18px) scale(.94)'}],{duration:this.reduced()?100:280,fill:'forwards',easing:ease});try{await a.finished;dialog.close();this.source?.focus({preventScroll:true});}finally{a.cancel();this.closing=false;}}

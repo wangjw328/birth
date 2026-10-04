@@ -1,11 +1,13 @@
 import * as T from './vendor/three.module.js';
-import {MemoryParticles} from './particles.js?v=20';
+import {MemoryParticles} from './particles.js?v=21';
 import {sampleFlow} from './flow-paths.mjs?v=16b';
 
 // Birthday-only extension: other themes keep their existing particle behavior.
 export class FlowMemoryParticles extends MemoryParticles {
  constructor(...args){
   super(...args);
+  this.setShape('saturn');
+  this.positions.set(this.targets);
   this.flowTime=0;this.reading=false;this.calm=0;this.tilt=0;this.targetTilt=0;
   let drag=null;const contacts=new Set();const canvas=this.renderer.domElement;
   canvas.addEventListener('pointerdown',e=>{contacts.add(e.pointerId);drag=contacts.size===1?{id:e.pointerId,y:e.clientY}:null;});

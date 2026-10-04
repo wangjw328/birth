@@ -1,4 +1,4 @@
-export const STARSEA_CONFIG={desktopParticles:12000,mobileParticles:5000,width:54,depth:38,thickness:.36,speed:.012,nodeRadius:.23,focusDistance:1.85,flightSeconds:1.05,backgroundStrength:.32};
+export const STARSEA_CONFIG={desktopParticles:12000,mobileParticles:5000,width:54,depth:38,thickness:.36,speed:.012,nodeRadius:.23,focusDistance:1.58,flightSeconds:1.05,backgroundStrength:.32};
 export const STARSEA_PALETTES={
  silver:{name:'银白淡金',dust:'#dae4ef',accent:'#d3c09c',sphere:'#f9fbff',background:'#182631'},
  blue:{name:'极光冰蓝',dust:'#c5dce9',accent:'#a1c8d2',sphere:'#eefaff',background:'#142933'},
@@ -9,5 +9,5 @@ export function canExploreStarsea({completed,scene,view,finaleComplete}){
  return completed&&scene==='rings'&&(view==='room'||(view==='ending'&&finaleComplete));
 }
 export function canExploreObservation({completed,scene,view,finaleComplete}){
- return completed&&['rings','aurora','sunset'].includes(scene)&&(view==='room'||(view==='ending'&&finaleComplete));
+ return completed&&['rings','aurora','sunset','garden','starlake'].includes(scene)&&(view==='room'||(view==='ending'&&finaleComplete));
 }
