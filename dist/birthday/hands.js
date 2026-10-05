@@ -38,7 +38,7 @@ export class HandControls{
    if(!hands.length){this.stable={name:'none',since:now};this.onFrame(null);this.feedback('正在寻找手掌 · 手掌完整放进小窗');return;}
    const hand=hands[0],name=hand.pinch?'pinch':hand.fist?'fist':hand.open?'open':'move';
    this.stable=stableGesture(this.stable,name,now);
-   this.feedback(({pinch:'捏合 · 选取光标处的物件',fist:'握拳 · 收拢回忆 / 停留许愿',open:'张掌 · 展开回忆',move:'移动 · 指尖控制光标'})[name]+(hands.length===2?' · 双手缩放':''));
+   this.feedback(({pinch:'捏合不触发点击',fist:'握拳 · 收拢回忆 / 停留许愿',open:'张掌 · 展开回忆',move:'移动 · 控制光标'})[name]+(hands.length===2?' · 双手缩放':''));
    this.onFrame({...hand,name,stable:this.stable.ready,zoom:hands.length===2?twoHandSpread(hands[0],hands[1]):null,timestamp:now});
   }catch(e){this.stop();this.onStatus('识别中断，请重新开启手势。'+e.message);console.warn('Hand inference:',e);}
  }

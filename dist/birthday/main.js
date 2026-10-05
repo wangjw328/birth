@@ -5,7 +5,7 @@ import {BirthdayJourney} from './journey.mjs';
 const journey=new BirthdayJourney();
 import {BirthdayRoom} from './photographic-room.js?v=16';
 import {FlowMemoryParticles as MemoryParticles} from './flow-particles.js?v=21';
-import {HandControls} from './hands.js?v=4';
+import {HandControls} from './hands.js?v=6';
 import {WindowFireworks} from './window-fireworks.js?v=20';
 import {BirthdayMotion} from './birthday-motion.js?v=3';
 import {setupMediaEditor} from './media-editor.js?v=7';
@@ -30,7 +30,7 @@ let recipientPreview=false,editorMemories=null;
 let memoryPaletteTouched=false;
 const sceneMemoryPalette={aurora:'blue',sunset:'gold',garden:'rose',rings:'gold',starlake:'blue'};
 function applyMemoryPalette(){if(!particles||memoryPaletteTouched)return;const name=sceneMemoryPalette[room?.sceneName]||'gold';particles.setPalette(name);document.querySelectorAll('[data-palette]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.palette===name)));}
-let lastPinch=0,lastGesture='',gestureX=.5,gestureY=.5;
+let gestureX=.5,gestureY=.5;
 let holding=false,holdSource='pointer',holdStart=0,holdFrame=0,wishDone=false,completionTimer=0;
 let soundOn=false;const sfx=new InteractionSounds();
 let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -133,7 +133,7 @@ function go(next,{force=false}={}){
  if(next==='entry'){room.setLit(false);wishDone=false;}if(next==='cake')updateCakeUI();
  const progress=next==='memory'?1:['cake','ending'].includes(next)?2:0;
  document.querySelectorAll('.view-dots i').forEach((el,i)=>el.classList.toggle('active',i===progress));
- $('footer-message').textContent=({entry:config.footerText,room:'点选发光物件，发现藏起来的心意。',window:SCENES[room.sceneName].description,memory:'每一颗微光，都藏着一个瞬间。',cake:'愿这一束光，照亮新的一岁。',ending:'烟花之后，还有一句话想送给你。'})[next];lastGesture='';syncJourney();
+ $('footer-message').textContent=({entry:config.footerText,room:'点选发光物件，发现藏起来的心意。',window:SCENES[room.sceneName].description,memory:'每一颗微光，都藏着一个瞬间。',cake:'愿这一束光，照亮新的一岁。',ending:'烟花之后，还有一句话想送给你。'})[next];syncJourney();
  });return transition?.then(()=>setTimeout(guideForView,reduced?20:240));
 }
 function updateCakeUI(){
@@ -197,9 +197,9 @@ async function getObservationExperience(scene){
  if(existing)return existing;
  if(!observationLoads.has(scene))observationLoads.set(scene,(async()=>{
   switch(scene){
-   case 'rings':{const {StarseaExperience}=await import('./starsea.js?v=34');return starsea=new StarseaExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation,onFocus:()=>sfx.play('memory')});}
+   case 'rings':{const {StarseaExperience}=await import('./starsea.js?v=37');return starsea=new StarseaExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation,onFocus:()=>sfx.play('memory')});}
    case 'aurora':{const {AuroraTerraceExperience}=await import('./aurora-terrace.js?v=28');return auroraTerrace=new AuroraTerraceExperience({getReduced:()=>reduced,getName:()=>config.recipient,beforeOpen:beforeObservation,onReturn:afterObservation,onStarLit:count=>sfx.play(count===3?'wish':'detail')});}
-   case 'sunset':{const {MoonlitPierExperience}=await import('./moonlit-pier.js?v=29');return moonlitPier=new MoonlitPierExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation});}
+   case 'sunset':{const {MoonlitPierExperience}=await import('./moonlit-pier.js?v=32');return moonlitPier=new MoonlitPierExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation});}
    case 'garden':{const {MoonGardenExperience}=await import('./moon-garden.js?v=7');return moonGarden=new MoonGardenExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation,toggleHand:()=>toggleHands(),isHandActive:()=>hands.active,onStageReady:()=>{guide.show({id:'garden-bloom',target:moonGarden.root.querySelector('.garden-bloom-hint'),label:'轻触花影，唤起流萤'});},onBloom:()=>{guide.complete('garden-bloom');sfx.play('detail');}});}
    case 'starlake':{const {LakeMirrorExperience}=await import('./lake-mirror.js?v=12');return lakeMirror=new LakeMirrorExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation,onStageReady:()=>{guide.show({id:'lake-scope',target:lakeMirror.root.querySelector('.lake-telescope'),label:'轻触黄铜星盘，望向更远的夜空'});},onScopeOpen:()=>{guide.complete('lake-scope');sfx.play('memory');}});}
    default:return null;
@@ -321,23 +321,26 @@ document.querySelectorAll('.scene-picker [data-scene]').forEach(button=>button.o
 document.addEventListener('pointerdown',event=>{if(!scenePicker.contains(event.target)){scenePicker.classList.remove('expanded');sceneToggle.setAttribute('aria-expanded','false');}});
 function status(s){$('gesture-status').hidden=false;$('gesture-status').textContent=s;$('camera-help').hidden=!/Chrome|权限|摄像头被占用|未检测|无法|失败/.test(s);}
 const hands=new HandControls($('hand-video'),data=>{
- if(!data){$('hand-cursor').hidden=true;lastGesture='';if(holding&&holdSource==='gesture')stopHold();if(!hands.active&&!hands.loading){document.body.classList.remove('hand-active');$('gesture-label').firstChild.textContent='开启手势';moonGarden?.setHandActive(false);}return;}
+ if(!data){$('hand-cursor').hidden=true;if(holding&&holdSource==='gesture')stopHold();if(!hands.active&&!hands.loading){document.body.classList.remove('hand-active');$('gesture-label').firstChild.textContent='开启手势';moonGarden?.setHandActive(false);}return;}
  gestureX+=(data.x-gestureX)*.5;gestureY+=(data.y-gestureY)*.5;const x=Math.max(0,Math.min(innerWidth-1,gestureX*innerWidth)),y=Math.max(0,Math.min(innerHeight-1,gestureY*innerHeight));
- $('hand-cursor').hidden=false;$('hand-cursor').style.left=x+'px';$('hand-cursor').style.top=y+'px';$('hand-cursor').classList.toggle('pinched',data.pinch);if($('settings').open)return;
+ $('hand-cursor').hidden=false;$('hand-cursor').style.left=x+'px';$('hand-cursor').style.top=y+'px';if($('settings').open)return;
  if(moonGarden?.active)moonGarden.setHand({x:gestureX,y:gestureY,open:data.open,pinch:data.pinch});
  if(lakeMirror?.active)lakeMirror.setHand({x:gestureX,y:gestureY,zoom:data.zoom});
  if(view==='memory'&&!$('media-dialog').open){if(data.stable&&data.open)setSpread(1);if(data.stable&&data.fist)setSpread(0);if(data.zoom)particles.setZoom(data.zoom);else particles.targetRotation=(data.palmX-.5)*2.2;}
  if(view==='cake'&&!$('media-dialog').open&&room.lit){if(data.stable&&data.fist)startHold('gesture');else if(holding&&holdSource==='gesture'&&!data.fist)stopHold();}
- if(data.stable&&data.pinch&&lastGesture!=='pinch'&&data.timestamp-lastPinch>850){lastPinch=data.timestamp;let target=document.elementFromPoint(x,y)?.closest('button');if(!target){let nearest=65;for(const button of document.querySelectorAll('button')){const r=button.getBoundingClientRect();if(!r.width||!r.height||getComputedStyle(button).visibility==='hidden'||button.closest('[hidden]')||button.getAttribute('aria-hidden')==='true')continue;const distance=Math.hypot(Math.max(r.left-x,0,x-r.right),Math.max(r.top-y,0,y-r.bottom));if(distance<nearest){nearest=distance;target=button;}}}if(target&&target!==$('gesture-toggle')&&!target.disabled){target.click();}else if(moonGarden?.active&&moonGarden.root.dataset.state==='view'){moonGarden.gestureBloom(gestureX,gestureY);}else if(view==='cake'&&!room.lit){const p=room.project('cake');if(Math.hypot(p.x-x,p.y-y)<130)lightCandle();}}
- if(data.stable)lastGesture=data.name;
 },status);
 // The camera model is large; load it only after the visitor requests hand control.
 async function toggleHands(){
  if(hands.active||hands.loading){hands.stop();document.body.classList.remove('hand-active');$('gesture-label').firstChild.textContent='开启手势';$('gesture-status').hidden=true;$('camera-help').hidden=true;moonGarden?.setHandActive(false);return;}
- $('gesture-label').firstChild.textContent='准备手势…';try{await hands.start();if(hands.active){document.body.classList.add('hand-active');$('gesture-label').firstChild.textContent='关闭手势';}}catch{$('gesture-label').firstChild.textContent='开启手势';}
+ $('gesture-label').firstChild.textContent='准备手势…';try{await hands.start();if(hands.active){document.body.classList.add('hand-active');$('gesture-label').firstChild.textContent='关闭手势';setTimeout(()=>{if(hands.active)$('gesture-status').hidden=true;},2600);}}catch{$('gesture-label').firstChild.textContent='开启手势';}
  moonGarden?.setHandActive(hands.active);
 }
 $('gesture-toggle').onclick=toggleHands;
+$('hand-display-toggle').onclick=()=>{
+ const collapsed=document.body.classList.toggle('hand-preview-collapsed');
+ $('hand-display-toggle').textContent=collapsed?'显示追踪':'隐藏追踪';
+ $('hand-display-toggle').setAttribute('aria-expanded',String(!collapsed));
+};
 window.addEventListener('pointermove',e=>{if(room&&!$('settings').open)room.mouse={x:(e.clientX/innerWidth-.5)*2,y:-(e.clientY/innerHeight-.5)*2};});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopHold();stopVoice();room?.cancelIgnition();if(view==='cake'&&!wishDone)updateCakeUI();sfx.suspend();mediaEditor.stopRecording();if(hands.active){hands.stop();status('页面离开后摄像头已关闭，需要时可重新开启。');}}else if(soundOn)sfx.resume()?.catch(()=>{});});
 window.addEventListener('pagehide',()=>{guideLandscape.removeEventListener?.('change',startGuide);starsea?.dispose();auroraTerrace?.dispose();moonlitPier?.dispose();moonGarden?.dispose();lakeMirror?.dispose();guide.dispose();hands.dispose();mediaEditor.dispose();stopVoice();sfx.dispose();});

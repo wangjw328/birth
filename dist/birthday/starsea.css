@@ -37,3 +37,14 @@ body.starsea-active>header,body.starsea-active>footer,body.starsea-active>.gestu
 .starsea-focus h2{font-size:clamp(32px,3.7vw,50px);font-weight:400;line-height:1.22;margin:5px 0}
 .starsea-focus p{max-width:42ch;margin:auto;font-size:12px;line-height:1.7;color:#d2d8db}
 @media(orientation:landscape) and (max-height:500px){.starsea-focus{bottom:0;width:min(450px,54vw);padding:8px 20px 12px}.starsea-focus h2{font-size:clamp(25px,3vw,35px)}.starsea-focus p{font-size:10px}.starsea-focus span{font-size:8px}}
+
+/* Direct manipulation belongs to the star field, while ordinary buttons stay accessible. */
+.starsea-canvas canvas{touch-action:none;cursor:grab}.starsea-canvas canvas:active{cursor:grabbing}
+.starsea-motion{position:absolute;right:4%;bottom:28px;display:flex;align-items:center;gap:7px;pointer-events:auto}
+#starsea-experience .starsea-motion button{padding:8px 12px;font-size:11px;background:#08111bbd;border-color:#d3c09c55;backdrop-filter:blur(8px)}
+.starsea-zoom{display:flex;gap:4px}
+#starsea-experience .starsea-zoom button{min-width:29px;padding:7px 8px;font-size:16px;line-height:1}
+#starsea-experience .starsea-motion button[aria-pressed=true]{color:var(--star-accent);border-color:var(--star-accent)}
+.starsea-gesture-hint{position:absolute;left:50%;bottom:38px;translate:-50% 0;margin:0;color:#dde7eccc;font-size:11px;letter-spacing:.14em;white-space:nowrap;text-shadow:0 2px 14px #020711;animation:starsea-hint-in .7s ease-out both}
+@keyframes starsea-hint-in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@media(orientation:landscape) and (max-height:500px){.starsea-motion{right:23px;bottom:12px}.starsea-gesture-hint{bottom:19px;font-size:10px}}

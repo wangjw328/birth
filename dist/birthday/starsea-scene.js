@@ -4,36 +4,104 @@ import * as T from './vendor/three.module.js';
 import {STARSEA_CONFIG as defaults,STARSEA_PALETTES} from './starsea-config.mjs?v=18';
 
 export class StarseaScene{
- constructor(container,{onFocus,onSpecial,onBusy,onError,reduced=false,config={}}={}){
-  Object.assign(this,{container,onFocus,onSpecial,onBusy,onError,reduced});this.config={...defaults,...config};this.active=false;this.time=0;this.selected=-1;this.nodes=[];this.satellites=[];this.orbits=[];this.stellarRoots=[];this.specialTargets=[];this.flight=null;
+ constructor(container,{onFocus,onSpecial,onBusy,onError,onInteract,reduced=false,config={}}={}){
+  Object.assign(this,{container,onFocus,onSpecial,onBusy,onError,onInteract,reduced});this.config={...defaults,...config};this.active=false;this.time=0;this.selected=-1;this.nodes=[];this.satellites=[];this.orbits=[];this.stellarRoots=[];this.specialTargets=[];this.flight=null;
   this.events=new AbortController();this.scene=new T.Scene();this.scene.fog=new T.FogExp2('#111c28',.0015);this.scene.add(new T.HemisphereLight('#d7e8ff','#69543a',2.2));const sunlight=new T.DirectionalLight('#fff0d4',3);sunlight.position.set(-8,10,12);this.scene.add(sunlight);
   this.camera=new T.PerspectiveCamera(46,1,.05,180);this.baseCamera=new T.Vector3(0,2.8,43);this.aim=new T.Vector3();this.camera.position.copy(this.baseCamera);
   this.pointer=new T.Vector2();this.drift=new T.Vector2();this.ray=new T.Raycaster();this.ray.params.Mesh={};this.mobile=matchMedia('(pointer: coarse)').matches;
+  this.orbit={yaw:0,pitch:0,zoom:1};this.targetOrbit={yaw:0,pitch:0,zoom:1};this.contacts=new Map();this.drag=null;this.pinched=false;
+  this.tiltEnabled=false;this.tiltBase=null;this.tilt={yaw:0,pitch:0};this.tiltTarget={yaw:0,pitch:0};this.onOrientation=e=>this.readOrientation(e);
   this.renderer=new T.WebGLRenderer({antialias:!this.mobile,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,this.mobile?1:1.5));container.append(this.renderer.domElement);
-  this.renderer.domElement.setAttribute('aria-label','三维宇宙：点击星球放大；键盘左右键切换星球，Escape恢复总览');
-  this.galaxy=new T.Group();this.scene.add(this.galaxy);this.buildBackdrop();this.buildDust();this.phenomena=new CosmicPhenomena(this.scene);
+  this.renderer.domElement.setAttribute('aria-label','三维宇宙：拖动环视，双指缩放，点击星球聚焦；键盘左右键切换星球，Escape恢复总览');
+  this.renderer.domElement.style.touchAction='none';
+  this.galaxy=new T.Group();this.scene.add(this.galaxy);this.buildBackdrop();this.buildSky();this.buildDust();this.phenomena=new CosmicPhenomena(this.scene);
   const signal=this.events.signal;
   this.renderer.domElement.tabIndex=0;
   this.renderer.domElement.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();this.overview();}else if(['ArrowRight','ArrowLeft','Enter'].includes(e.key)){e.preventDefault();if(!this.nodes.length)return;const direction=e.key==='ArrowLeft'?-1:1;this.focus((this.selected+direction+this.nodes.length)%this.nodes.length);}},{signal});
   window.addEventListener('resize',()=>this.resize(),{signal});
   container.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')this.pointer.set(e.clientX/innerWidth-.5,e.clientY/innerHeight-.5);},{signal});
   container.addEventListener('pointerleave',()=>this.pointer.set(0,0),{signal});
-  container.addEventListener('pointerdown',e=>{this.down={x:e.clientX,y:e.clientY};},{signal});
-  container.addEventListener('pointerup',e=>{
-   if(!this.down||Math.hypot(e.clientX-this.down.x,e.clientY-this.down.y)>10||this.flight)return;
-   this.down=null;this.ray.setFromCamera(new T.Vector2(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2),this.camera);
-   const special=this.ray.intersectObjects(this.specialTargets,false)[0];if(special){this.onSpecial?.(special.object.userData.special);return;}
-   const hit=this.ray.intersectObjects(this.nodes,false)[0];if(hit){this.focus(hit.object.userData.index,false,hit.object);return;}
-   // Small stars retain a 22 px touch target without inflating their visible geometry.
-   let nearest=null,distance=22;for(const node of this.nodes){const p=node.position.clone().project(this.camera);if(p.z>1||p.z< -1)continue;const d=Math.hypot((p.x+1)*innerWidth/2-e.clientX,(1-p.y)*innerHeight/2-e.clientY);if(d<distance){distance=d;nearest=node;}}if(nearest)this.focus(nearest.userData.index);
-  },{signal});
+  const canvas=this.renderer.domElement;
+  canvas.addEventListener('pointerdown',e=>this.pointerDown(e),{signal});
+  canvas.addEventListener('pointermove',e=>this.pointerMove(e),{signal});
+  canvas.addEventListener('pointerup',e=>this.pointerUp(e),{signal});
+  canvas.addEventListener('pointercancel',e=>this.pointerUp(e,true),{signal});
+  canvas.addEventListener('wheel',e=>{if(!this.active)return;e.preventDefault();this.targetOrbit.zoom=T.MathUtils.clamp(this.targetOrbit.zoom*Math.exp(e.deltaY*.001),this.selected<0?.44:.42,1.8);this.onInteract?.();},{signal,passive:false});
+  canvas.addEventListener('gesturestart',e=>e.preventDefault(),{signal,passive:false});
+  canvas.addEventListener('gesturechange',e=>e.preventDefault(),{signal,passive:false});
   this.renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();this.active=false;this.onError?.('星海画面暂时中断，请返回飞船后重试。');},{signal});
   this.setPalette('silver');this.resize();
  }
+ pointerDown(e){
+  if(!this.active||this.flight)return;
+  e.preventDefault();this.renderer.domElement.setPointerCapture?.(e.pointerId);
+  this.contacts.set(e.pointerId,{x:e.clientX,y:e.clientY});this.pointer.set(0,0);
+  if(this.contacts.size===1){this.pinched=false;this.drag={x:e.clientX,y:e.clientY,yaw:this.targetOrbit.yaw,pitch:this.targetOrbit.pitch,moved:false};}
+  else if(this.contacts.size===2){this.pinched=true;this.drag=null;const [a,b]=[...this.contacts.values()];this.pinch={distance:Math.max(8,Math.hypot(a.x-b.x,a.y-b.y)),zoom:this.targetOrbit.zoom};}
+ }
+ pointerMove(e){
+  if(!this.contacts.has(e.pointerId)||!this.active||this.flight)return;
+  e.preventDefault();this.contacts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(this.contacts.size>=2&&this.pinch){const [a,b]=[...this.contacts.values()];const distance=Math.max(8,Math.hypot(a.x-b.x,a.y-b.y));this.targetOrbit.zoom=T.MathUtils.clamp(this.pinch.zoom*this.pinch.distance/distance,this.selected<0?.44:.42,1.8);this.onInteract?.();return;}
+  if(this.pinched||!this.drag)return;
+  const dx=e.clientX-this.drag.x,dy=e.clientY-this.drag.y;
+  if(Math.hypot(dx,dy)>5)this.drag.moved=true;
+  if(!this.drag.moved)return;
+  this.targetOrbit.yaw=this.drag.yaw-dx*.006;
+  this.targetOrbit.pitch=T.MathUtils.clamp(this.drag.pitch-dy*.0045,-1.1,1.1);
+  this.onInteract?.();
+ }
+ pointerUp(e,cancelled=false){
+  if(!this.contacts.has(e.pointerId))return;
+  const tap=!cancelled&&!this.pinched&&this.contacts.size===1&&!this.drag?.moved&&!this.flight;
+  this.contacts.delete(e.pointerId);if(!this.contacts.size){this.pinched=false;this.pinch=null;this.drag=null;}
+  if(tap)this.pick(e.clientX,e.clientY);
+ }
+ pick(x,y){
+  const rect=this.renderer.domElement.getBoundingClientRect();
+  this.ray.setFromCamera(new T.Vector2((x-rect.left)/rect.width*2-1,1-(y-rect.top)/rect.height*2),this.camera);
+  const special=this.ray.intersectObjects(this.specialTargets,false)[0];if(special){this.onSpecial?.(special.object.userData.special);return;}
+  const hit=this.ray.intersectObjects(this.nodes,false)[0];if(hit){this.focus(hit.object.userData.index,false,hit.object);return;}
+  let nearest=null,distance=22;
+  for(const node of this.nodes){const p=node.position.clone().project(this.camera);if(p.z>1||p.z< -1)continue;const d=Math.hypot(rect.left+(p.x+1)*rect.width/2-x,rect.top+(1-p.y)*rect.height/2-y);if(d<distance){distance=d;nearest=node;}}
+  if(nearest)this.focus(nearest.userData.index);
+ }
+ async enableTilt(){
+  if(this.tiltEnabled)return true;
+  if(!('DeviceOrientationEvent'in window))return false;
+  try{if(typeof DeviceOrientationEvent.requestPermission==='function'&&(await DeviceOrientationEvent.requestPermission())!=='granted')return false;}
+  catch{return false;}
+  if(!this.active||this.events.signal.aborted)return false;
+  this.tiltEnabled=true;this.calibrateTilt();window.addEventListener('deviceorientation',this.onOrientation,{signal:this.events.signal});return true;
+ }
+ disableTilt(){this.tiltEnabled=false;window.removeEventListener('deviceorientation',this.onOrientation);this.tiltBase=null;this.tiltTarget={yaw:0,pitch:0};}
+ calibrateTilt(){this.tiltBase=null;this.tiltTarget={yaw:0,pitch:0};}
+ readOrientation(e){
+  if(!this.active||!this.tiltEnabled||!Number.isFinite(e.beta)||!Number.isFinite(e.gamma))return;
+  const angle=screen.orientation?.angle??window.orientation??0;
+  if(!this.tiltBase||this.tiltBase.angle!==angle){this.tiltBase={beta:e.beta,gamma:e.gamma,angle};return;}
+  const delta=(a,b)=>((a-b+540)%360)-180,r=angle*Math.PI/180;
+  const beta=delta(e.beta,this.tiltBase.beta),gamma=delta(e.gamma,this.tiltBase.gamma);
+  const x=gamma*Math.cos(r)-beta*Math.sin(r),y=gamma*Math.sin(r)+beta*Math.cos(r);
+  this.tiltTarget.yaw=T.MathUtils.clamp(x*.007,-.23,.23);
+  this.tiltTarget.pitch=T.MathUtils.clamp(y*.005,-.16,.16);
+ }
+ zoomBy(factor){this.targetOrbit.zoom=T.MathUtils.clamp(this.targetOrbit.zoom*factor,this.selected<0?.44:.42,1.8);this.onInteract?.();}
  buildBackdrop(){
   this.backTexture=new T.TextureLoader().load('./assets/observatory-milkyway-v1.png');this.backTexture.colorSpace=T.SRGBColorSpace;
   this.backMaterial=new T.MeshBasicMaterial({map:this.backTexture,color:'#9da8b2',depthTest:false,depthWrite:false,fog:false,toneMapped:false});
   this.backdrop=new T.Mesh(new T.PlaneGeometry(2,2),this.backMaterial);this.backdrop.position.set(0,0,-100);this.backdrop.frustumCulled=false;this.backdrop.renderOrder=-100;this.camera.add(this.backdrop);this.scene.add(this.camera);
+ }
+ buildSky(){
+  const count=this.mobile?1400:3000,positions=new Float32Array(count*3),colors=new Float32Array(count*3);let seed=46827;
+  const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
+  for(let i=0;i<count;i++){
+   const longitude=random()*Math.PI*2,latitude=Math.asin(random()*2-1),radius=105+random()*36;
+   positions[i*3]=Math.cos(latitude)*Math.sin(longitude)*radius;positions[i*3+1]=Math.sin(latitude)*radius;positions[i*3+2]=Math.cos(latitude)*Math.cos(longitude)*radius;
+   const shade=.28+random()*.54;colors[i*3]=shade*.76;colors[i*3+1]=shade*.87;colors[i*3+2]=shade;
+  }
+  const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(positions,3));geometry.setAttribute('color',new T.BufferAttribute(colors,3));
+  this.skyStars=new T.Points(geometry,new T.PointsMaterial({size:this.mobile?.46:.53,vertexColors:true,transparent:true,opacity:.83,depthWrite:false}));this.scene.add(this.skyStars);
  }
  buildDust(){
   const count=Math.min(innerWidth,innerHeight)<650?this.config.mobileParticles:this.config.desktopParticles;this.dustCount=count;
@@ -126,8 +194,8 @@ export class StarseaScene{
   const node=this.focusAnchor||this.nodes[index],p=node.position.clone(),distance=this.config.focusDistance*(this.mobile?1.09:1)*(node.geometry.parameters.radius/this.config.nodeRadius);
   return {camera:p.clone().add(new T.Vector3(.04,.10,distance)),aim:p.clone()};
  }
- focus(index,instant=false,anchor=null){if(!Number.isInteger(index)||index<0||index>=this.nodes.length||(!instant&&this.flight))return;this.focusAnchor=anchor;this.selected=index;this.fly(index,instant);}
- overview(instant=false){if(this.flight&&!instant)return;this.focusAnchor=null;this.selected=-1;this.fly(-1,instant);}
+ focus(index,instant=false,anchor=null){if(!Number.isInteger(index)||index<0||index>=this.nodes.length||(!instant&&this.flight))return;this.focusAnchor=anchor;this.selected=index;this.targetOrbit.zoom=1;this.fly(index,instant);}
+ overview(instant=false){if(this.flight&&!instant)return;this.focusAnchor=null;this.selected=-1;this.targetOrbit.zoom=1;this.fly(-1,instant);}
  fly(index,instant){
   const end=this.destination(index);this.onBusy?.(true);
   this.backTarget=new T.Color(index<0?'#9da8b2':'#64717e');
@@ -142,10 +210,16 @@ export class StarseaScene{
   if(this.flight){const f=this.flight;f.elapsed+=dt;const t=Math.min(1,f.elapsed/f.duration),e=t*t*t*(t*(t*6.-15.)+10.);this.baseCamera.lerpVectors(f.startCamera,f.camera,e);this.aim.lerpVectors(f.startAim,f.aim,e);if(t===1){this.flight=null;this.onBusy?.(false);this.onFocus?.(f.index);}}
   const shadeMix=this.reduced?1:1-Math.exp(-dt*3.2);this.backMaterial.color.lerp(this.backTarget,shadeMix);this.nodes.forEach(node=>{const u=node.material.uniforms.focusDim;u.value+=((node.userData.targetDim??1)-u.value)*shadeMix;for(const child of node.children)if(child.userData.planetRing)child.material.uniforms.focusDim.value=u.value;});
   if(this.reduced)this.drift.set(0,0);else this.drift.lerp(this.pointer,1-Math.exp(-dt*2.8));
-  const amount=this.selected<0?5.2:.12;this.camera.position.copy(this.baseCamera);this.camera.position.x+=this.drift.x*amount;this.camera.position.y-=this.drift.y*amount*.65;this.camera.lookAt(this.aim);
-  this.phenomena.update(this.time,this.reduced,this.selected>=0);this.backdrop.position.x=this.drift.x*3.4;this.backdrop.position.y=-this.drift.y*2.2;this.renderer.render(this.scene,this.camera);
+  const ease=1-Math.exp(-dt*(this.reduced?18:7));
+  this.orbit.yaw+=(this.targetOrbit.yaw-this.orbit.yaw)*ease;this.orbit.pitch+=(this.targetOrbit.pitch-this.orbit.pitch)*ease;this.orbit.zoom+=(this.targetOrbit.zoom-this.orbit.zoom)*ease;
+  this.tilt.yaw+=(this.tiltTarget.yaw-this.tilt.yaw)*ease;this.tilt.pitch+=(this.tiltTarget.pitch-this.tilt.pitch)*ease;
+  const direction=this.baseCamera.clone().sub(this.aim),radius=direction.length()*this.orbit.zoom;
+  const yaw=Math.atan2(direction.x,direction.z)+this.orbit.yaw+this.tilt.yaw+this.drift.x*(this.selected<0?.12:.015);
+  const pitch=T.MathUtils.clamp(Math.asin(direction.y/direction.length())+this.orbit.pitch+this.tilt.pitch-this.drift.y*(this.selected<0?.07:.012),-1.25,1.25);
+  this.camera.position.set(this.aim.x+Math.sin(yaw)*Math.cos(pitch)*radius,this.aim.y+Math.sin(pitch)*radius,this.aim.z+Math.cos(yaw)*Math.cos(pitch)*radius);this.camera.lookAt(this.aim);
+  this.phenomena.update(this.time,this.reduced,this.selected>=0);this.backdrop.position.x=this.drift.x*1.5;this.backdrop.position.y=-this.drift.y;this.renderer.render(this.scene,this.camera);
  }
- dispose(){this.active=false;this.events.abort();this.clearNodes();this.phenomena.dispose();for(const object of [this.dust,this.backdrop]){object.geometry.dispose();object.material.dispose();}this.backTexture?.dispose();this.renderer.dispose();this.renderer.domElement.remove();}
+ dispose(){this.active=false;this.disableTilt();this.events.abort();this.clearNodes();this.phenomena.dispose();for(const object of [this.dust,this.backdrop,this.skyStars]){object.geometry.dispose();object.material.dispose();}this.backTexture?.dispose();this.renderer.dispose();this.renderer.domElement.remove();}
 }
 
 

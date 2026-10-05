@@ -15,3 +15,30 @@ body.pier-active>header,body.pier-active>footer,body.pier-active>.gesture-button
 @media(max-height:500px) and (orientation:landscape){.pier-entry-copy{left:5%;bottom:19%}.pier-entry-copy h2{font-size:26px}.pier-entry-copy p{font-size:11px}.pier-enter{left:63%;bottom:20%}.pier-top{top:15px;right:19%}.pier-top>span{font-size:15px}.pier-top button{font-size:10px;padding:7px 10px!important}.pier-top nav{gap:5px}}
 @media(prefers-reduced-motion:reduce){.pier-render{transition:none}.pier-meteor{display:none}}
 #moonlit-pier[data-reduced=true] .pier-meteor{display:none}
+
+/* The bottle and water are scene objects; controls stay small and outside the view. */
+.pier-play{position:absolute;inset:0;z-index:3;pointer-events:none}
+#moonlit-pier:not([data-state=view]) .pier-play{visibility:hidden}
+.pier-playfield{position:absolute;inset:0;pointer-events:none;outline:none}
+#moonlit-pier[data-phase=aiming] .pier-playfield{pointer-events:auto;touch-action:none;cursor:ew-resize}
+.pier-bottle{position:absolute;left:61%;top:67%;z-index:2;translate:-50% -50%;width:70px;height:70px;padding:0!important;border:1px solid #fff4cfb5!important;border-radius:50%!important;background:radial-gradient(circle,#ffe1a66b 0%,#e1a85e20 40%,transparent 70%)!important;box-shadow:0 0 15px #f5d08d88,0 0 36px #ffd79a66,inset 0 0 18px #fff4db6b;animation:pier-bottle-pulse 2.8s ease-in-out infinite;pointer-events:auto}
+.pier-bottle span{font:34px/1 var(--serif,serif);color:#fff4d4;text-shadow:0 0 14px #fff,0 0 26px #edb76f}
+@keyframes pier-bottle-pulse{50%{box-shadow:0 0 21px #f8d797c9,0 0 52px #ffd79a88,inset 0 0 21px #fff4dba0;transform:scale(1.12)}}
+.pier-aim-marker{position:absolute;left:73%;top:45%;width:35px;height:35px;translate:-50% -50%;border:1px solid #ffe9b27d;border-radius:50%;box-shadow:0 0 22px #f7d99544,inset 0 0 10px #f7d99533;opacity:0;transition:opacity .4s,box-shadow .4s;pointer-events:none}
+.pier-aim-marker:after{content:'';position:absolute;inset:12px;border-radius:50%;background:#fff2cf;box-shadow:0 0 16px 4px #f5d48b}
+#moonlit-pier[data-phase=aiming] .pier-aim-marker{opacity:.55}
+#moonlit-pier[data-aligned=true] .pier-aim-marker{opacity:1;box-shadow:0 0 26px #ffe0a9b8,0 0 60px #dabb7866}
+.pier-hint{position:absolute;left:4%;bottom:8%;max-width:42%;margin:0;color:#fff4dc;font:14px/1.5 var(--sans,system-ui);letter-spacing:.05em;text-shadow:0 2px 16px #071020,0 0 18px #edc5859c}
+.pier-actions{position:absolute;right:4%;bottom:6%;display:flex;gap:8px;align-items:center;pointer-events:auto}
+#moonlit-pier .pier-actions button{font-size:12px;padding:10px 16px;background:#0d1d2dc9}
+#moonlit-pier .pier-actions .pier-release{background:#f4dfbde8;color:#182335;border-color:#fff3d9}
+#moonlit-pier .pier-actions .pier-release:disabled{opacity:.44;cursor:default}
+#moonlit-pier .pier-actions .pier-gyro[aria-pressed=true]{border-color:#f4dca7;color:#f5d9a7}
+#moonlit-pier .pier-actions .pier-replay{background:#f4dfbde8;color:#182335}
+#moonlit-pier[data-phase=seek] .pier-actions,#moonlit-pier[data-phase=seek] .pier-playfield,#moonlit-pier[data-phase=seek] .pier-aim-marker{display:none}
+#moonlit-pier[data-phase=aiming] .pier-bottle,#moonlit-pier[data-phase=flowing] .pier-bottle,#moonlit-pier[data-phase=complete] .pier-bottle{display:none}
+#moonlit-pier[data-phase=flowing] .pier-actions,#moonlit-pier[data-phase=flowing] .pier-aim-marker,#moonlit-pier[data-phase=complete] .pier-aim-marker{display:none}
+#moonlit-pier:not([data-phase=complete]) .pier-replay,#moonlit-pier[data-phase=complete] .pier-gyro,#moonlit-pier[data-phase=complete] .pier-release{display:none}
+#moonlit-pier[data-phase=aiming] .pier-render{transform:scale(1.075);transform-origin:61% 67%}
+@media(max-height:500px) and (orientation:landscape){.pier-bottle{width:55px;height:55px}.pier-bottle span{font-size:28px}.pier-hint{font-size:11px;bottom:6%;max-width:43%}.pier-actions{bottom:4%;right:4%}#moonlit-pier .pier-actions button{font-size:10px;padding:8px 10px}.pier-aim-marker{width:27px;height:27px}.pier-aim-marker:after{inset:10px}}
+@media(prefers-reduced-motion:reduce){.pier-bottle{animation:none}.pier-aim-marker{transition:none}}

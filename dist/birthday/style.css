@@ -199,3 +199,20 @@ footer{bottom:max(23px,env(safe-area-inset-bottom))}
  #gesture-status{right:max(16px,env(safe-area-inset-right));bottom:max(64px,calc(env(safe-area-inset-bottom) + 56px));max-width:210px}
  #settings{width:min(430px,92vw);padding:20px 22px}.settings-header{padding-bottom:10px}.settings-header h2{font-size:22px;margin:8px 0 5px}#settings-form>label{margin:11px 0}
 }
+
+/* Hand tracking stays available without covering the scene or exposing camera video. */
+#hand-preview{width:148px;bottom:142px;border-color:#abcfc170;background:#0b1722e8;box-shadow:0 9px 28px #0008}
+.camera-image{aspect-ratio:4/3}
+#hand-preview #hand-video{opacity:0!important}
+#hand-preview #hand-feedback{font-size:9px;padding:5px 7px;line-height:1.35;min-height:25px}
+#hand-display-toggle{display:none;position:fixed;z-index:26;right:3.6vw;bottom:98px;padding:5px 10px;border:1px solid #b8d9cb70;border-radius:999px;background:#0e1c27da;backdrop-filter:blur(12px);color:#d6e9e5;font-size:11px;letter-spacing:.5px;box-shadow:0 4px 18px #0007}
+body.hand-active #hand-display-toggle{display:block}
+body.hand-preview-collapsed #hand-preview{display:none}
+body.hand-preview-collapsed #hand-cursor{display:none}
+#hand-cursor{width:25px;height:25px;font-size:16px;box-shadow:0 0 14px #e9d0a455}
+#hand-cursor.pinched{background:#e9d0a433;transform:translate(-50%,-50%) scale(.82)}
+@media(max-width:900px) and (max-height:520px) and (orientation:landscape){
+ #hand-preview{right:max(16px,env(safe-area-inset-right));bottom:max(101px,calc(env(safe-area-inset-bottom) + 93px));width:106px}
+ #hand-display-toggle{right:max(16px,env(safe-area-inset-right));bottom:max(62px,calc(env(safe-area-inset-bottom) + 54px));font-size:10px;padding:4px 8px}
+ #hand-preview #hand-feedback{font-size:8px;min-height:21px;padding:4px 5px}
+}

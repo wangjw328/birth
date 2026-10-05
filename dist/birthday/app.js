@@ -9,7 +9,7 @@ if(giftId&&installGateRequired()&&/^[a-z0-9-]{3,48}$/.test(giftId)){
 } else {
   try{
     if(giftId)window.__BIRTHDAY_GIFT__=await loadPublishedGift(giftId);
-    await import('./main.js?v=91');
+    await import('./main.js?v=95');
   }catch(error){
     console.error('生日房间加载失败',error);
     const fatal=document.getElementById('fatal');
