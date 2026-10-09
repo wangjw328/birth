@@ -1,0 +1,13 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>观星空间 · 星体光影预览</title>
+<style>*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#0a111b;color:#e9e8df;font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif}#stage{position:fixed;inset:0}#bar{position:fixed;z-index:2;top:18px;left:18px;right:18px;display:flex;gap:7px;align-items:center;flex-wrap:wrap;pointer-events:none}#bar>*{pointer-events:auto}button,a{border:1px solid #e1d5bd55;border-radius:22px;background:#101a28ce;color:#e8e3d8;padding:7px 13px;text-decoration:none;backdrop-filter:blur(10px);cursor:pointer}button[aria-pressed=true]{background:#d2c4a633;color:#fff;border-color:#f3e4c1}#label{position:fixed;left:4vw;bottom:5vh;z-index:2;font:22px Georgia,"Songti SC",serif;letter-spacing:2px;text-shadow:0 2px 16px #000}#label small{display:block;margin-bottom:9px;color:#c9b798;font:11px system-ui;letter-spacing:2px}@media(max-height:500px){#bar{top:8px;left:10px;right:10px}button,a{padding:5px 9px;font-size:11px}#label{font-size:16px;bottom:12px}}</style>
+<div id="stage"></div><div id="bar"><button data-world="1">香槟冰环</button><button data-world="6">日蚀碎环</button><button data-world="7">珍珠光轨</button><button data-world="10">双日云海</button><button data-world="11">紫雾卫星</button><button id="overview">整片星海</button><a href="./starsea-preview.html">完整观星体验 ↗</a></div><div id="label"><small>OBSERVATION DECK</small><span>香槟冰环</span></div>
+<script type="module">
+import {StarseaScene} from './starsea-scene.js?v=39';
+const names={1:'香槟冰环',6:'日蚀碎环',7:'珍珠光轨',10:'双日云海',11:'紫雾卫星'};
+const scene=new StarseaScene(document.querySelector('#stage'),{onFocus:index=>{document.querySelector('#label span').textContent=names[index]||'观望整片星海';document.querySelectorAll('[data-world]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.world)===index)));}});
+scene.setPlanets();scene.active=true;scene.focus(1,true);scene.resize();
+document.querySelectorAll('[data-world]').forEach(b=>b.onclick=()=>scene.focus(Number(b.dataset.world),true));
+document.querySelector('#overview').onclick=()=>scene.overview();
+let last=performance.now();function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!document.hidden)scene.update(dt);requestAnimationFrame(frame)}requestAnimationFrame(frame);
+window.addEventListener('pagehide',()=>scene.dispose());
+</script></html>

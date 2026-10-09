@@ -7,7 +7,7 @@ const WORLD_NOTES=[
  {kicker:'冰质行星',title:'蓝裂冰原',text:'深蓝裂隙穿过冻结地表，微光在冰层内部折返。'},
  {kicker:'矿物行星',title:'金脉暗星',text:'石墨色岩层之间，细窄金色矿脉像沉睡的闪电。'},
  {kicker:'海洋行星',title:'潮汐之眼',text:'云旋追随辽阔海面，青色海岸在夜侧轻轻发亮。'},
- {kicker:'黑曜行星',title:'静默星环',text:'近乎无光的表面，只留下冷色裂纹与纤细环带。'},
+ {kicker:'黑曜行星',title:'静默星环',text:'几乎吞没光线的岩面，只有断续碎石弧在星光下闪过。'},
  {kicker:'云海超级地球',title:'远风之境',text:'厚重云层覆盖大地，暖金色气流绕行整个世界。'},
  {kicker:'深蓝热木星',title:'HD 189733 b',text:'钴蓝色来自炽热大气与可能含硅酸盐的云雾。'},
  {kicker:'熔岩超级地球',title:'55 Cancri e',text:'灼热岩壳之间，熔岩海在昼夜交界缓慢发光。'},
@@ -46,7 +46,7 @@ export class StarseaExperience{
  async enter(){
   if(this.busy||!this.active)return;this.busy=true;const ticket=this.ticket;this.$('.starsea-enter').disabled=true;this.$('.starsea-status').textContent='正在展开星海…';
   try{
-   if(!this.scene){const {StarseaScene}=await import('./starsea-scene.js?v=33');if(ticket!==this.ticket)return;this.scene=new StarseaScene(this.stage,{reduced:this.getReduced(),onFocus:index=>this.showFocus(index),onSpecial:info=>this.showSpecial(info),onBusy:value=>this.setBusy(value),onInteract:()=>{this.$('.starsea-gesture-hint').hidden=true;},onError:message=>{this.scene?.dispose();this.scene=null;this.$('.starsea-status').textContent=message;}});}
+   if(!this.scene){const {StarseaScene}=await import('./starsea-scene.js?v=39');if(ticket!==this.ticket)return;this.scene=new StarseaScene(this.stage,{reduced:this.getReduced(),onFocus:index=>this.showFocus(index),onSpecial:info=>this.showSpecial(info),onBusy:value=>this.setBusy(value),onInteract:()=>{this.$('.starsea-gesture-hint').hidden=true;},onError:message=>{this.scene?.dispose();this.scene=null;this.$('.starsea-status').textContent=message;}});}
    this.scene.reduced=this.getReduced();this.scene.setPlanets();this.scene.setPalette(this.palette);this.scene.active=true;this.$('.starsea-gesture-hint').hidden=false;this.stage.hidden=false;this.scene.resize();this.setBusy(true);this.root.dataset.state='entering';
    await this.rear.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(1.8)',filter:'blur(9px)'}],{duration:this.getReduced()?150:1500,easing:'cubic-bezier(.22,.7,.16,1)'}).finished;
    if(ticket!==this.ticket)return;this.rear.hidden=true;this.ui.hidden=false;this.$('.starsea-overview').hidden=false;this.root.dataset.state='galaxy';this.$('.starsea-status').textContent='';this.setBusy(false);this.$('.starsea-overview').focus();
@@ -66,7 +66,3 @@ export class StarseaExperience{
  update(dt){if(this.active)this.scene?.update(dt);}
  dispose(){++this.ticket;this.scene?.dispose();this.root.remove();this.orientation.remove();}
 }
-
-
-
-

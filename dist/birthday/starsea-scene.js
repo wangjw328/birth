@@ -1,4 +1,4 @@
-import {planetMaterial,stellarMaterial,stellarGlowMaterial} from './planet-appearance.js?v=21';
+import {planetMaterial,planetHaloMaterial,stellarMaterial,stellarGlowMaterial} from './planet-appearance.js?v=25';
 import {CosmicPhenomena} from './cosmic-phenomena.js?v=18';
 import * as T from './vendor/three.module.js';
 import {STARSEA_CONFIG as defaults,STARSEA_PALETTES} from './starsea-config.mjs?v=18';
@@ -126,10 +126,11 @@ export class StarseaScene{
  setPlanets(){
   const items=Array.from({length:12},(_,index)=>({index}));
   this.clearNodes();this.items=items;
-  const locations=[[-11,-3,3],[5,3,-2],[12,-4,7],[13,7,-5],[-1,-6,8],[-6,.2,-5],[7,-1,11],[-13,6,-6],[-16,1,9],[2,8,8],[-2,4,15],[16,1,2]];
-  const radii=[.83,.78,.56,.58,.48,.73,.55,.47,.72,.55,.78,.64];
+  const locations=[[-11,-3,3],[5,3,-2],[12,-4,7],[13,7,-5],[-1,-6,8],[-6,.2,-5],[7,-1,11],[-8,6,-6],[-16,1,9],[2,8,8],[-2,4,15],[11,1,2]];
+  const radii=[1.08,1.02,.76,.77,.68,.97,.77,.68,.94,.75,1.04,.88];
   items.forEach((item,i)=>{
-   const p=locations[i]||[Math.sin(i*2.4)*14,Math.cos(i*1.7)*3,Math.cos(i*2.4)*14];
+   const original=locations[i]||[Math.sin(i*2.4)*14,Math.cos(i*1.7)*3,Math.cos(i*2.4)*14];
+   const p=[original[0]*1.42,original[1]*1.3,original[2]];
    const geometry=new T.SphereGeometry(radii[i],this.mobile?36:64,this.mobile?24:40);
    if([2,3,4,6,9].includes(i)){
     const vertices=geometry.attributes.position,roughness=i===2?.034:i===9?.023:.012;
@@ -140,7 +141,16 @@ export class StarseaScene{
     }
     geometry.computeVertexNormals();
    }
-   const node=new T.Mesh(geometry,planetMaterial(i,i));node.position.set(...p);node.userData.index=i;if(i===1||i===6||i===10)this.addPlanetRing(node,i===1?2.35:(i===10?2.12:1.96));this.nodes.push(node);this.scene.add(node);
+   const node=new T.Mesh(geometry,planetMaterial(i,i));node.position.set(...p);node.userData.index=i;
+   if([1,6,7,10,11].includes(i)){
+    const color=i===6?'#e8d8bb':i===11?'#8e82d1':'#eee4cf';
+    const halo=new T.Mesh(new T.SphereGeometry(radii[i]*1.055,this.mobile?28:48,this.mobile?20:32),planetHaloMaterial(color));halo.userData.planetHalo=true;halo.userData.baseColor=color;node.add(halo);
+    if(i===1)this.addPlanetRing(node,{scale:2.55,tilt:[1.22,.22,-.48],inner:1.42,density:92,strength:.91,tint:'#f7e7cd',glint:.75});
+    if(i===6)this.addDebrisArc(node);
+    if(i===7){this.addPlanetRing(node,{scale:2.32,tilt:[.92,.25,.37],inner:1.40,density:25,strength:.55,tint:'#fff2d7',glint:.25});this.addPlanetRing(node,{scale:2.18,tilt:[1.22,-.33,-.57],inner:1.40,density:19,strength:.46,tint:'#dce7f0',glint:.20});}
+    if(i===11){const moon=new T.Mesh(new T.SphereGeometry(radii[i]*.18,20,14),new T.MeshStandardMaterial({color:'#667087',roughness:.96}));moon.position.set(radii[i]*2.3,radii[i]*.62,-radii[i]*.5);moon.userData.planetMoon=true;node.add(moon);}
+   }
+   this.nodes.push(node);this.scene.add(node);
    const points=[];for(let j=0;j<161;j++){const a=j/160*Math.PI*2;points.push(new T.Vector3(Math.cos(a)*7.5,Math.sin(a)*.14,Math.sin(a)*6));}
    const orbit=new T.Line(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color:'#c2cedb',transparent:true,opacity:.05}));orbit.position.copy(node.position);orbit.rotation.z=(i-2)*.08;this.orbits.push(orbit);this.scene.add(orbit);
   });
@@ -154,12 +164,18 @@ export class StarseaScene{
   this.buildStellarBodies();this.buildAsteroidBelt();
   this.setPalette(this.palette||'silver');this.overview(true);
  }
- addPlanetRing(node,scale=2.3){
+ addPlanetRing(node,{scale=2.5,tilt=[1.13,.15,-.38],inner=1.3,density=230,strength=1,tint='#e1e6e9',glint=.5}={}){
   const radius=node.geometry.parameters.radius;
-  const material=new T.ShaderMaterial({transparent:true,side:T.DoubleSide,depthWrite:false,uniforms:{tint:{value:new T.Color('#d4bd91')},inner:{value:radius*1.38},outer:{value:radius*scale},focusDim:{value:1}},vertexShader:`varying vec3 local;void main(){local=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`uniform vec3 tint;uniform float inner;uniform float outer;uniform float focusDim;varying vec3 local;void main(){float r=(length(local.xy)-inner)/(outer-inner);float wide=.72+.12*sin(r*26.);float grain=.96+.04*sin(r*117.);float cassini=1.-.92*exp(-pow((r-.46)*49.,2.));float split=1.-.66*exp(-pow((r-.76)*63.,2.));float edge=smoothstep(0.,.075,r)*(1.-smoothstep(.87,1.,r));float opacity=clamp(wide*grain*cassini*split*edge,0.,1.)*.32;vec3 color=mix(tint*.47,tint*1.12,smoothstep(.20,.83,r));gl_FragColor=vec4(color*focusDim,opacity);
+  const material=new T.ShaderMaterial({transparent:true,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending,uniforms:{tint:{value:new T.Color(tint)},inner:{value:radius*inner},outer:{value:radius*scale},density:{value:density},strength:{value:strength},glintStrength:{value:glint},focusDim:{value:1}},vertexShader:`varying vec3 local;void main(){local=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`uniform vec3 tint;uniform float inner;uniform float outer;uniform float density;uniform float strength;uniform float glintStrength;uniform float focusDim;varying vec3 local;void main(){float r=(length(local.xy)-inner)/(outer-inner);float angle=atan(local.y,local.x);float envelope=smoothstep(0.,.035,r)*(1.-smoothstep(.92,1.,r));float gap=1.-.88*exp(-pow((r-.50)*39.,2.));float ribbons=pow(.5+.5*cos(r*density),11.);float finer=pow(.5+.5*cos(r*density*1.83+.35),25.);float broad=pow(.5+.5*cos(r*47.),3.)*.07;float glint=pow(max(0.,sin(angle+1.1)),24.)*glintStrength;float opacity=envelope*gap*(ribbons*.80+finer*.28+broad+glint*ribbons)*focusDim*strength;vec3 color=mix(tint*.72,tint*1.65,smoothstep(.15,.84,r));gl_FragColor=vec4(color*1.2,opacity);
 #include <colorspace_fragment>
 }`});
-  const ring=new T.Mesh(new T.RingGeometry(radius*1.38,radius*scale,128),material);ring.rotation.set(1.13,.15,-.38);ring.userData.planetRing=true;ring.userData.baseColor=node.userData.index===6?'#82aebc':node.userData.index===10?'#b6b4ac':'#d6be91';node.add(ring);
+  const ring=new T.Mesh(new T.RingGeometry(radius*inner,radius*scale,this.mobile?128:256),material);ring.rotation.set(...tilt);ring.userData.planetRing=true;ring.userData.baseColor=tint;node.add(ring);
+ }
+ addDebrisArc(node){
+  const radius=node.geometry.parameters.radius,count=this.mobile?85:155;let seed=27183;const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
+  const arc=new T.InstancedMesh(new T.IcosahedronGeometry(1,0),new T.MeshStandardMaterial({color:'#c5b59a',roughness:1,flatShading:true}),count);const rock=new T.Object3D();
+  for(let i=0;i<count;i++){const a=i<count*.63?.15+random()*2.47:3.75+random()*1.74,r=radius*(1.42+random()*.95),size=radius*(.014+Math.pow(random(),5)*.055);rock.position.set(Math.cos(a)*r,Math.sin(a)*r,(random()-.5)*radius*.15);rock.rotation.set(random()*6,random()*6,random()*6);rock.scale.set(size,size*(.65+random()*.7),size*(.55+random()*.8));rock.updateMatrix();arc.setMatrixAt(i,rock.matrix);arc.setColorAt(i,new T.Color(['#e0c69b','#8c8276','#e8e1d0','#6b6766'][i%4]));}
+  arc.instanceMatrix.needsUpdate=true;arc.rotation.set(1.06,.2,-.42);arc.userData.planetDebris=true;node.add(arc);
  }
  buildStellarBodies(){
   const makeStar=({position,radius,type,color,info})=>{const group=new T.Group(),surface=new T.Mesh(new T.SphereGeometry(radius,this.mobile?28:48,this.mobile?18:32),stellarMaterial(type)),glow=new T.Mesh(new T.SphereGeometry(radius*1.32,this.mobile?24:40,this.mobile?16:28),stellarGlowMaterial(color)),hit=new T.Mesh(new T.SphereGeometry(Math.max(radius*1.8,.42),16,12),new T.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));hit.userData.special=info;group.add(surface,glow,hit);group.position.set(...position);this.specialTargets.push(hit);this.stellarRoots.push(group);this.scene.add(group);return group;};
@@ -186,7 +202,7 @@ export class StarseaScene{
   this.phenomena.setPalette(palette.accent);this.scene.fog.color.set(palette.background);
   const base=new T.Color(palette.dust),accent=new T.Color(palette.accent),colors=this.dustGeometry.attributes.color;
   for(let i=0;i<this.dustCount;i++){const c=i%6===0?accent:base,brightness=.55+(i%19)/22;colors.setXYZ(i,c.r*brightness,c.g*brightness,c.b*brightness);}colors.needsUpdate=true;
-  this.nodes.forEach(node=>{node.material.uniforms.accent.value.set(palette.accent);for(const child of node.children)if(child.userData.planetRing)child.material.uniforms.tint.value.set(child.userData.baseColor).lerp(new T.Color(palette.accent),.28);});this.orbits.forEach(orbit=>orbit.material.color.set(palette.accent));
+  this.nodes.forEach(node=>{node.material.uniforms.accent.value.set(palette.accent);for(const child of node.children){if(child.userData.planetRing)child.material.uniforms.tint.value.set(child.userData.baseColor).lerp(new T.Color(palette.accent),.12);if(child.userData.planetHalo)child.material.uniforms.tint.value.set(child.userData.baseColor).lerp(new T.Color(palette.accent),.15);}});this.orbits.forEach(orbit=>orbit.material.color.set(palette.accent));
  }
  resize(){this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(innerWidth,innerHeight);const height=2*Math.tan(T.MathUtils.degToRad(this.camera.fov/2))*100;this.backdrop.scale.set(height*this.camera.aspect*1.08,height*1.08,1);if(!this.flight){if(this.selected<0)this.overview(true);else this.focus(this.selected,true,this.focusAnchor);}}
  destination(index){
@@ -201,14 +217,15 @@ export class StarseaScene{
   this.backTarget=new T.Color(index<0?'#9da8b2':'#64717e');
   this.nodes.forEach((node,i)=>{node.userData.targetDim=index<0||i===index?1:.39;});
   this.orbits.forEach((orbit,i)=>{orbit.material.opacity=i===index?.045:.008;orbit.position.copy(i===index&&this.focusAnchor?this.focusAnchor.position:this.nodes[i].position);});
-  if(instant){this.flight=null;this.baseCamera.copy(end.camera);this.aim.copy(end.aim);this.camera.position.copy(this.baseCamera);this.camera.lookAt(this.aim);this.backMaterial.color.copy(this.backTarget);this.nodes.forEach(node=>{node.material.uniforms.focusDim.value=node.userData.targetDim;for(const child of node.children)if(child.userData.planetRing)child.material.uniforms.focusDim.value=node.userData.targetDim;});this.onBusy?.(false);this.onFocus?.(index);return;}
+  this.nodes.forEach((node,i)=>{if(index<0||i===index)node.visible=true;});
+  if(instant){this.flight=null;this.baseCamera.copy(end.camera);this.aim.copy(end.aim);this.camera.position.copy(this.baseCamera);this.camera.lookAt(this.aim);this.backMaterial.color.copy(this.backTarget);this.nodes.forEach((node,i)=>{node.visible=index<0||i===index;node.material.uniforms.focusDim.value=node.userData.targetDim;for(const child of node.children)if(child.userData.planetRing||child.userData.planetHalo)child.material.uniforms.focusDim.value=node.userData.targetDim;});this.onBusy?.(false);this.onFocus?.(index);return;}
   this.flight={elapsed:0,duration:this.reduced?.18:this.config.flightSeconds,startCamera:this.baseCamera.clone(),startAim:this.aim.clone(),...end,index};
  }
  update(dt){
   if(!this.active)return;
   if(!this.reduced){for(const node of [...this.nodes,...this.satellites]){node.rotation.y+=dt*.035;if(node.material.uniforms?.time)node.material.uniforms.time.value=this.time;}this.time+=dt;this.dustMaterial.uniforms.time.value=this.time;this.galaxy.rotation.y=Math.sin(this.time*this.config.speed)*.05;for(const star of [this.warmStar,this.redDwarf,this.neutronStar]){if(star?.children[0]?.material.uniforms?.time)star.children[0].material.uniforms.time.value=this.time;}if(this.neutronStar){this.neutronStar.rotation.y+=dt*.32;for(const child of this.neutronStar.children)if(child.userData.pulsarBeam)child.material.uniforms.intensity.value=child.userData.pulseBase*(.92+.08*Math.sin(this.time*1.7));}if(this.asteroidBelt)this.asteroidBelt.rotation.y+=dt*.008;}
-  if(this.flight){const f=this.flight;f.elapsed+=dt;const t=Math.min(1,f.elapsed/f.duration),e=t*t*t*(t*(t*6.-15.)+10.);this.baseCamera.lerpVectors(f.startCamera,f.camera,e);this.aim.lerpVectors(f.startAim,f.aim,e);if(t===1){this.flight=null;this.onBusy?.(false);this.onFocus?.(f.index);}}
-  const shadeMix=this.reduced?1:1-Math.exp(-dt*3.2);this.backMaterial.color.lerp(this.backTarget,shadeMix);this.nodes.forEach(node=>{const u=node.material.uniforms.focusDim;u.value+=((node.userData.targetDim??1)-u.value)*shadeMix;for(const child of node.children)if(child.userData.planetRing)child.material.uniforms.focusDim.value=u.value;});
+  if(this.flight){const f=this.flight;f.elapsed+=dt;const t=Math.min(1,f.elapsed/f.duration),e=t*t*t*(t*(t*6.-15.)+10.);this.baseCamera.lerpVectors(f.startCamera,f.camera,e);this.aim.lerpVectors(f.startAim,f.aim,e);if(t===1){this.flight=null;this.nodes.forEach((node,i)=>{node.visible=f.index<0||i===f.index;});this.onBusy?.(false);this.onFocus?.(f.index);}}
+  const shadeMix=this.reduced?1:1-Math.exp(-dt*3.2);this.backMaterial.color.lerp(this.backTarget,shadeMix);this.nodes.forEach(node=>{const u=node.material.uniforms.focusDim;u.value+=((node.userData.targetDim??1)-u.value)*shadeMix;for(const child of node.children)if(child.userData.planetRing||child.userData.planetHalo)child.material.uniforms.focusDim.value=u.value;});
   if(this.reduced)this.drift.set(0,0);else this.drift.lerp(this.pointer,1-Math.exp(-dt*2.8));
   const ease=1-Math.exp(-dt*(this.reduced?18:7));
   this.orbit.yaw+=(this.targetOrbit.yaw-this.orbit.yaw)*ease;this.orbit.pitch+=(this.targetOrbit.pitch-this.orbit.pitch)*ease;this.orbit.zoom+=(this.targetOrbit.zoom-this.orbit.zoom)*ease;

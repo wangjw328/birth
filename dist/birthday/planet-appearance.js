@@ -40,7 +40,8 @@ export function planetMaterial(index, kind=index%12) {
   return new T.ShaderMaterial({
     uniforms:{
       kind:{value:kind},seed:{value:index*1.371+2.3},time:{value:0},
-      accent:{value:new T.Color('#d3c09c')},focusDim:{value:1}
+      accent:{value:new T.Color('#d3c09c')},focusDim:{value:1},
+      ringLit:{value:[1,6].includes(index)?1:0}
     },
     vertexShader:vertex,
     fragmentShader:`
@@ -51,6 +52,7 @@ uniform int kind;
 uniform float seed;
 uniform float time;
 uniform float focusDim;
+uniform float ringLit;
 uniform vec3 accent;
 ${texture}
 void main() {
@@ -110,17 +112,17 @@ void main() {
     float cloud=smoothstep(.58,.72,fronts);
     color=mix(color,vec3(.83,.87,.85),cloud*.73);
     atmosphere=vec3(.22,.55,.75);atmospherePower=.22;gloss=mix(.38,.08,max(land,cloud));
-  } else if(kind==6) { // Black glass with a few cool fault lines.
-    float glass=fbm(q*6.5), fissure=pow(ridge(fbm(q*27.0)),22.0);
-    color=mix(vec3(.009,.013,.020),vec3(.055,.072,.083),glass);
-    color+=vec3(.035,.28,.36)*fissure*.72;
-    atmosphere=vec3(.07,.34,.48);atmospherePower=.08;gloss=.28;
-  } else if(kind==7) { // Golden cloud world with broken white upper decks.
+  } else if(kind==6) { // Eclipse-like obsidian, with mineral relief and sparse amber faults.
+    float glass=fbm(q*7.5), fissure=pow(ridge(fbm(q*23.0)),24.0);
+    color=mix(vec3(.009,.012,.018),vec3(.065,.070,.076),glass);
+    color+=vec3(.49,.27,.10)*fissure*.26;
+    atmosphere=vec3(.74,.48,.20);atmospherePower=.08;gloss=.08;
+  } else if(kind==7) { // Pearlescent world: the bright center of an orbital sculpture.
     float banks=cloudBand(p,time*.008,17.0,8.0);
     float upper=fbm(vec3(q.x*7.0+time*.005,q.y*8.0,q.z*7.0));
-    color=mix(vec3(.20,.14,.085),vec3(.58,.42,.25),banks);
-    color=mix(color,vec3(.77,.69,.52),smoothstep(.61,.80,upper)*.30);
-    atmosphere=vec3(.91,.66,.32);atmospherePower=.16;
+    color=mix(vec3(.52,.51,.47),vec3(.91,.88,.79),banks);
+    color=mix(color,vec3(1.0,.97,.88),smoothstep(.61,.80,upper)*.38);
+    atmosphere=vec3(.98,.89,.68);atmospherePower=.24;
   } else if(kind==8) { // Deep sapphire hot Jupiter; broad blue weather cells.
     float banks=cloudBand(p,time*.013,27.0,11.0);
     float glint=fbm(q*14.0);
@@ -134,18 +136,18 @@ void main() {
     color=mix(color,vec3(1.0,.19,.025),max(cracks*.82,pools*.66));
     color+=vec3(.85,.28,.035)*pow(cracks,3.0)*.38;
     atmosphere=vec3(.86,.13,.025);atmospherePower=.12;gloss=.02;
-  } else if(kind==10) { // Circumbinary giant: grey, chalk and bronze cloud layers.
-    float banks=cloudBand(p,time*.005,22.0,5.0);
-    float thin=cloudBand(p,time*.004,48.0,2.5);
-    color=mix(vec3(.095,.095,.105),vec3(.36,.33,.29),banks);
-    color=mix(color,vec3(.59,.56,.51),smoothstep(.70,.91,thin)*.19);
-    atmosphere=vec3(.60,.54,.47);atmospherePower=.10;
+  } else if(kind==10) { // Circumbinary giant: weather bands lit by two distant suns.
+    float banks=cloudBand(p,time*.005,15.0,8.0);
+    float thin=cloudBand(p,time*.004,39.0,3.5);
+    color=mix(vec3(.11,.095,.078),vec3(.51,.38,.25),banks);
+    color=mix(color,vec3(.82,.69,.49),smoothstep(.69,.88,thin)*.31);
+    atmosphere=vec3(.95,.72,.43);atmospherePower=.19;
   } else { // Young methane giant, violet haze and pearly high clouds.
     float banks=cloudBand(p,time*.007,18.0,9.0);
     float high=fbm(vec3(q.x*6.0+time*.007,q.y*10.0,q.z*6.0));
-    color=mix(vec3(.035,.038,.087),vec3(.20,.17,.29),banks);
-    color=mix(color,vec3(.51,.51,.62),smoothstep(.66,.86,high)*.25);
-    atmosphere=vec3(.46,.37,.73);atmospherePower=.21;gloss=.07;
+    color=mix(vec3(.008,.012,.040),vec3(.092,.055,.18),banks);
+    color=mix(color,vec3(.49,.46,.68),smoothstep(.65,.84,high)*.20);
+    atmosphere=vec3(.34,.27,.70);atmospherePower=.31;gloss=.04;
   }
 
   // A broad terminator makes the worlds read as spheres without a plastic gloss.
@@ -153,19 +155,40 @@ void main() {
     float filaments=fbm(vec3(q.x*18.0+time*.004,q.y*25.0,q.z*18.0));
     color*=.84+.31*filaments;
   }
-  vec3 n=normalize(vNormal),v=normalize(vView),l=normalize(vec3(-.54,.72,1.0));
+  vec3 n=normalize(vNormal),v=normalize(vView);
+  vec3 l=normalize(mix(vec3(-.54,.72,1.0),vec3(.66,.25,-.90),ringLit));
   float ndl=dot(n,l), daylight=smoothstep(-.25,.31,ndl);
-  float diffuse=max(ndl,0.0);
-  vec3 lit=color*surfaceShade*(.055+.93*diffuse);
+  float diffuse=pow(max(ndl,0.0),1.22);
+  vec3 lit=color*surfaceShade*mix(.028+.88*diffuse,.018+.60*diffuse,ringLit);
   float spec=pow(max(dot(reflect(-l,n),v),0.0),mix(18.0,90.0,gloss));
-  lit+=vec3(.75,.84,.91)*spec*gloss*.31*daylight;
-  float edge=pow(1.0-max(dot(n,v),0.0),5.0);
-  lit+=atmosphere*edge*atmospherePower*(.22+.78*daylight);
+  lit+=vec3(.75,.84,.91)*spec*gloss*.24*daylight;
+  float edge=pow(1.0-max(dot(n,v),0.0),3.5);
+  lit+=atmosphere*edge*atmospherePower*(.14+.86*daylight);
+  float crescent=edge*smoothstep(-.18,.57,ndl);
+  lit+=mix(atmosphere*.34+vec3(.10,.14,.18),vec3(.86,.91,.98),ringLit)*crescent*mix(.36,1.85,ringLit);
+  lit+=ringLit*vec3(.42,.46,.52)*pow(crescent,3.0)*.7;
+  if(kind==10){float twin=pow(max(dot(n,normalize(vec3(-.70,.18,.80))),0.0),2.1);lit+=color*vec3(.72,.46,.20)*twin*.52;}
+  if(kind==11){lit+=vec3(.12,.08,.27)*edge*.30;}
   if(kind==9) lit+=vec3(.20,.038,.003)*pow(ridge(fbm(q*21.0)),17.0)*(.35+.65*daylight);
-  lit*=.78+.22*pow(max(dot(n,v),0.0),.55);
+  lit*=.73+.27*pow(max(dot(n,v),0.0),.55);
   lit=mix(lit,lit*(accent*.45+vec3(.82)),.055);
   gl_FragColor=vec4(lit*focusDim,1.0);
   #include <colorspace_fragment>
+}`
+  });
+}
+
+export function planetHaloMaterial(color='#e5ebef') {
+  return new T.ShaderMaterial({
+    transparent:true,depthWrite:false,blending:T.AdditiveBlending,
+    uniforms:{tint:{value:new T.Color(color)},focusDim:{value:1}},
+    vertexShader:vertex,
+    fragmentShader:`varying vec3 vNormal;varying vec3 vView;uniform vec3 tint;uniform float focusDim;
+void main(){vec3 n=normalize(vNormal),v=normalize(vView),l=normalize(vec3(.66,.25,-.90));
+float rim=pow(1.0-max(dot(n,v),0.0),6.0);
+float lightSide=smoothstep(-.3,.48,dot(n,l));
+gl_FragColor=vec4(tint,rim*lightSide*.68*focusDim);
+#include <colorspace_fragment>
 }`
   });
 }

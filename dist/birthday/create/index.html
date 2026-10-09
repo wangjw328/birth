@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#101924"><title>制作专属生日房间 · 星愿房间</title>
+ <link rel="stylesheet" href="./style.css?v=1">
+</head>
+<body>
+ <header class="topbar"><a class="brand" href="../">✧ <span>星愿房间<small>制作台</small></span></a><span class="top-note">你的故事，放进这一晚的风景</span><a class="outline" href="../">查看模板 ↗</a></header>
+ <main class="workspace">
+  <aside class="scene-aside"><div class="scene-image" id="scene-image" role="img" aria-label="当前房间场景"></div><div class="scene-caption"><span>01 / 场景预览</span><strong id="scene-name">极光木屋</strong><p id="scene-description"></p></div></aside>
+  <section class="editor"><div class="intro"><span class="eyebrow">MAKE IT YOURS</span><h1>布置一间，<br>只属于你们的房间。</h1><p>先挑风景，再写下想说的话。制作中可以随时保存，完成后从收礼人的视角预览。</p></div>
+   <nav class="steps" aria-label="制作步骤"><button type="button" data-step="0" aria-current="step"><i>01</i> 选房间</button><button type="button" data-step="1"><i>02</i> 写祝福</button><button type="button" data-step="2"><i>03</i> 放回忆</button><button type="button" data-step="3"><i>04</i> 预览与生成</button></nav>
+   <form id="creator-form" novalidate>
+    <section class="step-panel" data-panel="0"><div class="section-head"><span>01 / CHOOSE THE VIEW</span><h2>今晚，想把风景留在哪里？</h2><p>场景会影响房间布置和旅程结束后的特殊观景空间。</p></div><div class="scene-grid" id="scene-grid"></div></section>
+    <section class="step-panel" data-panel="1" hidden><div class="section-head"><span>02 / THE WORDS</span><h2>让祝福用你的语气说出来。</h2><p>这里的文字会分别出现在开场、页面底部和结尾。</p></div><div class="field-grid"><label class="wide">开场标题<small>进入房间前最先看到的一句话</small><textarea id="entry-title" maxlength="50" rows="2"></textarea></label><label>送给谁<small>用于生日祝福粒子文字</small><input id="recipient" maxlength="20" required value="亲爱的你"></label><label>祝福语气<small>选择后仍可自行修改</small><select id="relationship"><option value="gentle">温柔通用</option><option value="friend">送给朋友</option><option value="love">送给爱人</option><option value="family">送给家人</option><option value="self">送给自己</option></select></label><label class="wide">最后想说的话<small>烟花之后出现</small><textarea id="message" maxlength="150" rows="3"></textarea></label><label class="wide">页面底部短句<small>开场左下角的一句话</small><input id="footer-text" maxlength="50" value="一间房，一场只属于你的生日。"></label></div></section>
+    <section class="step-panel" data-panel="2" hidden><div class="section-head"><span>03 / YOUR MEMORIES</span><h2>只留下你想送出的内容。</h2><p>照片、录音、书信、小物件和暗号都可以独立开关。未替换的示例不会进入专属版。</p></div>
+     <div class="memory-block"><label class="choice"><input id="include-photo" type="checkbox"> <span><strong>照片</strong><small>最多 8 张，打开回忆墙时依次出现</small></span></label><div class="memory-fields" data-for="photo"><label>选择照片<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div id="photo-list" class="photo-list"></div></div></div>
+     <div class="memory-block"><label class="choice"><input id="include-audio" type="checkbox"> <span><strong>录音</strong><small>听见你亲口说出的祝福</small></span></label><div class="memory-fields" data-for="audio"><label>上传音频<input id="audio" type="file" accept="audio/*"></label><div class="audio-actions"><button id="record" type="button" class="outline">● 现场录音</button><span id="audio-status">尚未加入录音</span></div></div></div>
+     <div class="memory-block"><label class="choice"><input id="include-note" type="checkbox" checked> <span><strong>书信</strong><small>留一段可以慢慢读的话</small></span></label><div class="memory-fields" data-for="note"><label>书信内容<textarea id="note" maxlength="300" rows="4">这一年，你已经做得很好了。接下来的日子，也请记得把温柔留给自己。</textarea></label></div></div>
+     <div class="memory-block"><label class="choice"><input id="include-object" type="checkbox"> <span><strong>记忆小物件</strong><small>一件承载共同故事的小东西</small></span></label><div class="memory-fields" data-for="object"><label>小物件名称<input id="object-name" maxlength="30" placeholder="比如：一张电影票"></label><label>翻开后出现的话<input id="object-story" maxlength="100" placeholder="写下它的故事"></label></div></div>
+     <div class="memory-block"><label class="choice"><input id="include-secret" type="checkbox"> <span><strong>你们的暗号</strong><small>轻触后才显现的一句话</small></span></label><div class="memory-fields" data-for="secret"><label>暗号<input id="secret-word" maxlength="30" placeholder="只有你们懂的词"></label><label>揭开后出现的话<input id="secret-answer" maxlength="100" placeholder="暗号背后的心意"></label></div></div>
+    </section>
+    <section class="step-panel" data-panel="3" hidden><div class="section-head"><span>04 / SEND THE NIGHT</span><h2>先替对方走一遍，再送出。</h2><p>预览会从开场重新开始。确认体验合适，再生成专属礼物包。</p></div><div class="review-card"><div id="review-image"></div><div><span>即将生成</span><strong id="review-title"></strong><p id="review-detail"></p></div></div><p class="notice">草稿仅保存在当前浏览器。专属礼物包下载后，需要解压并放入项目的 <code>dist/birthday/gifts/</code>，部署完成才有可分享的链接。公开仓库中的私人照片和录音会被知道地址的人访问。</p><div class="final-actions"><button id="preview" type="button" class="outline">从收礼视角预览 ↗</button><button id="generate" type="button" class="primary">生成专属版 ↓</button></div><div id="export-result" class="export-result" hidden><h3>礼物包已准备好</h3><p>如果浏览器没有自动下载，请点击下方链接。解压后上传整个文件夹。</p><a id="download" href="#" download>下载礼物包 ↓</a><label>发布后的分享路径<input id="share-path" readonly></label><small>此路径在文件上传并完成部署后才可访问。</small></div></section>
+    <div class="form-footer"><button id="previous" type="button" class="outline" hidden>← 上一步</button><span id="save-state" role="status">还没有保存草稿</span><button id="save" type="button" class="outline">保存草稿</button><button id="next" type="button" class="primary">下一步 →</button></div>
+   </form>
+  </section>
+ </main><div id="toast" role="status" aria-live="polite"></div><script type="module" src="./creator.js?v=1"></script>
+</body></html>

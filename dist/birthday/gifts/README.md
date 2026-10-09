@@ -1,6 +1,6 @@
 # 专属生日礼物发布位置
 
-在生日页面点击“布置房间”，保存内容后点击“导出礼物”，会下载一个 ZIP。解压 ZIP，将其中 `birth-...` 整个文件夹放在本目录中，保留 `gift.json`、`index.html`、`manifest.webmanifest` 和 `assets` 的原有层级。不要把 ZIP 原样放进本目录。
+从 `/birthday/` 查看模板，点击“用此模板制作”进入 `/birthday/create/`。编辑并保存草稿后，可在 `/birthday/preview/` 体验收礼版。回到制作台点击“生成专属版”，会下载一个 ZIP。解压 ZIP，将其中 `birth-...` 整个文件夹放在本目录中，保留 `gift.json`、`index.html`、`manifest.webmanifest` 和 `assets` 的原有层级。不要把 ZIP 原样放进本目录。
 
 发布到 Cloudflare 后，分享 `https://你的域名/birthday/gifts/birth-.../`。本地编辑页面显示的 `/birthday/gifts/birth-.../` 只是部署后的路径，不能直接发给收礼人。礼物包不会自动上传，也不会自动发布。
 

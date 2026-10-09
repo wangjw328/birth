@@ -15,3 +15,12 @@
 GitHub 默认分支使用 `main`。Cloudflare Pages 不需要构建命令，输出目录填写 `dist`。完整设置见 [CLOUDFLARE-DEPLOY.md](CLOUDFLARE-DEPLOY.md)。
 
 线上根地址会自动进入当前最新版生日房间 `/birthday/`；其他主题可从 `/collection/` 查看。
+
+## 生日房间的新制作流程
+
+1. `/birthday/`：五种房间的公共模板体验，可选择场景并走完示例旅程。
+2. `/birthday/create/`：独立制作台，编辑场景、标题、收礼人、祝福与要保留的回忆；草稿自动保存在当前浏览器，也可手动保存。
+3. `/birthday/preview/`：读取本机草稿，以收礼视角从头体验，不显示制作表单。此链接依赖同一浏览器里的草稿，不能直接分享。
+4. 制作台的“生成专属版”会下载 ZIP。解压后把整个 `birth-...` 文件夹放入 `dist/birthday/gifts/` 并部署，再分享 `/birthday/gifts/birth-.../`。发布版只有收礼体验，不显示模板选择和制作入口。
+
+制作台和模板在普通手机浏览器中可打开；发布给收礼人的手机版仍沿用“添加到主屏幕”引导。礼物包目前采用手动上传静态文件的方式，不会自动发布到 GitHub 或 Cloudflare。

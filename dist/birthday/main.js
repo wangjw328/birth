@@ -1,5 +1,5 @@
 import {canExploreObservation} from './starsea-config.mjs?v=26';
-import {ParticleWish} from './particle-wish.js?v=3';
+import {ParticleWish} from './particle-wish.js?v=10';
 import {SCENES} from './scene-presets.mjs?v=31';
 import {BirthdayJourney} from './journey.mjs';
 const journey=new BirthdayJourney();
@@ -15,6 +15,12 @@ import {InteractionSounds} from './interaction-sounds.js?v=1';
 import {saveDraft,loadDraft} from './draft-store.mjs?v=2';
 import {buildGiftPackage} from './gift-package.mjs?v=2';
 const $=id=>document.getElementById(id);
+if(document.body.dataset.mode==='template'){
+ const make=document.createElement('button');
+ make.id='template-create';make.className='primary compact';make.type='button';
+ make.textContent='用这个场景制作专属版 ↗';make.hidden=true;
+ document.querySelector('#ending-ui').append(make);
+}
 document.querySelector('.header-tools').insertAdjacentHTML('beforeend','<button class="icon-label" id="edit-preview" type="button" hidden>返回布置</button><button class="icon-label" id="export-gift" type="button" hidden>导出礼物</button>');
 document.querySelector('#entry>p').id='entry-lead';
 document.querySelector('#settings-form').insertAdjacentHTML('afterbegin',`<label>想用怎样的语气？<small>选择建议文案后仍可自行修改</small><select id="relationship-input"><option value="gentle">温柔通用</option><option value="friend">送给朋友</option><option value="love">送给爱人</option><option value="family">送给家人</option><option value="self">送给自己</option></select></label><fieldset class="memory-choice"><legend>这次想留下什么？</legend><p>只选需要的内容，回忆会按选中的顺序呈现。</p><div class="memory-choice-grid"><label><input id="include-photo" type="checkbox" data-memory-toggle="photo"> 照片</label><label><input id="include-audio" type="checkbox" data-memory-toggle="audio"> 录音</label><label><input id="include-note" type="checkbox" data-memory-toggle="note" checked> 书信</label><label><input id="include-object" type="checkbox" data-memory-toggle="object" checked> 记忆小物件</label><label><input id="include-secret" type="checkbox" data-memory-toggle="secret" checked> 你们的暗号</label></div><small id="memory-choice-help">照片和录音需要先加入自己的素材；未替换的示例不会送出。</small></fieldset><label>一件有故事的小物件<small>可以是一张票、一只杯子或一本书</small><input id="object-name-input" maxlength="30" value="一张留在口袋里的票"></label><label>它承载的一句话<input id="object-story-input" maxlength="100" value="愿下一段旅程，仍有让你期待的风景。"></label><label>只有你们懂的暗号<input id="secret-word-input" maxlength="30" value="今晚的暗号"></label><label>轻触暗号后出现的话<input id="secret-answer-input" maxlength="100" value="答案是：你值得被认真爱着。"></label>`);
@@ -87,6 +93,7 @@ function syncJourney(){
  $('customize').hidden=recipientPreview||(guided&&view!=='entry');
  $('edit-preview').hidden=Boolean(publishedGift)||!recipientPreview||view!=='entry';
  $('export-gift').hidden=Boolean(publishedGift)||!recipientPreview||view!=='entry';
+ if(document.body.dataset.mode==='template')$('template-create').hidden=!(journey.completed&&view==='ending');
  for(const id of ['room-reset','cake-back','back-room'])$(id).hidden=guided||view==='entry';
  document.querySelectorAll('[data-object="cake"],[data-object="window"]').forEach(el=>el.hidden=guided);
  const unread=journey.nextUnread(memories.length);
@@ -129,7 +136,7 @@ function go(next,{force=false}={}){
  view=next;document.body.dataset.view=next;
  for(const [id,v] of Object.entries({entry:'entry','room-ui':'room','memory-ui':'memory','cake-ui':'cake','ending-ui':'ending'}))$(id).hidden=next!==v;
  $('memory-stage').hidden=next!=='memory';$('room-reset').hidden=next==='entry';room.setView(next);particles.active=next==='memory';
- if(next==='memory'){particles.resetFlow();particles.setShape('saturn');document.querySelectorAll('[data-shape]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.shape==='saturn')));setSpread(0);particles.spread=0;particles.zoom=particles.targetZoom=1;particles.rotation=particles.targetRotation=0;particles.positions.set(particles.targets);particles.resize();particles.update(0,performance.now()/1000);$('memory-stage').animate([{opacity:0},{opacity:1}],{duration:reduced?150:1100,delay:reduced?0:350,fill:'backwards'});}if(next==='ending'){fireworks.cosmic=room.isShip;fireworks.start();finale.start(config.recipient);}else{fireworks.stop();finale.stop();delete document.body.dataset.finale;}
+ if(next==='memory'){particles.resetFlow();particles.setShape('saturn');document.querySelectorAll('[data-shape]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.shape==='saturn')));setSpread(0);particles.spread=0;particles.zoom=particles.targetZoom=1;particles.rotation=particles.targetRotation=0;particles.positions.set(particles.targets);particles.resize();particles.update(0,performance.now()/1000);$('memory-stage').animate([{opacity:0},{opacity:1}],{duration:reduced?150:1100,delay:reduced?0:350,fill:'backwards'});}if(next==='ending'){fireworks.cosmic=room.isShip;fireworks.start();finale.start(config.recipient,room.sceneName);}else{fireworks.stop();finale.stop();delete document.body.dataset.finale;}
  if(next==='entry'){room.setLit(false);wishDone=false;}if(next==='cake')updateCakeUI();
  const progress=next==='memory'?1:['cake','ending'].includes(next)?2:0;
  document.querySelectorAll('.view-dots i').forEach((el,i)=>el.classList.toggle('active',i===progress));
@@ -174,7 +181,7 @@ async function openMemory(index){
 }
 function applyReduced(){reduced=$('low-motion').checked;document.body.classList.toggle('reduced',reduced);if(room){room.reduced=reduced;room.cinema.last=-Infinity;}if(particles)particles.reduced=reduced;if(fireworks)fireworks.reduced=reduced;if(finale)finale.reduced=reduced;scheduleQuietUI();}
 try{
- room=new BirthdayRoom($('room-stage'),publishedGift?.scene||'aurora');await room.ready;room.resize();fireworks=new WindowFireworks(room.scene);finale=new ParticleWish($('particle-wish'),phase=>{document.body.dataset.finale=phase;if(phase!=='fireworks')fireworks.stop();if(phase==='complete'){journey.completed=true;guide.complete('ending-fireworks');}syncJourney();$('journey-status').textContent=phase==='fireworks'?'窗前花火正在盛放':phase==='gathering'?'星光正在写下祝福':'旅程完成，可自由回看';$('footer-message').textContent=phase==='complete'?'Happy Birthday '+config.recipient:phase==='gathering'?'每一颗微光，都在拼出你的名字。':'烟花之后，还有一句话想送给你。';if(phase==='complete')setTimeout(guideForView,reduced?20:500);});room.setMemories(memories);
+ room=new BirthdayRoom($('room-stage'),publishedGift?.scene||'aurora');await room.ready;room.resize();fireworks=new WindowFireworks(room.scene);finale=new ParticleWish($('particle-wish'),phase=>{document.body.dataset.finale=phase;if(phase!=='fireworks')fireworks.stop();if(phase==='complete'){journey.completed=true;guide.complete('ending-fireworks');}syncJourney();$('journey-status').textContent=phase==='fireworks'?'窗前花火正在盛放':phase==='transition'?'正在驶向更深的星海':phase==='gathering'?'星光正在写下祝福':'旅程完成，可自由回看';$('footer-message').textContent=phase==='complete'?'Happy Birthday '+config.recipient:phase==='gathering'?'每一颗微光，都在拼出你的名字。':phase==='transition'?'把星球留在身后，下一程写着你的名字。':'烟花之后，还有一句话想送给你。';if(phase==='complete')setTimeout(guideForView,reduced?20:500);});room.setMemories(memories);
  particles=new MemoryParticles($('particle-canvas'),$('photo-orbit'),openMemory);particles.setCards(memories);applyMemoryPalette();particles.resize();
  if(publishedGift){
   document.body.dataset.scene=room.sceneName;$('scene-toggle').firstChild.textContent='风景：'+document.querySelector(`[data-scene="${room.sceneName}"]`).textContent.trim()+' ';
@@ -197,7 +204,7 @@ async function getObservationExperience(scene){
  if(existing)return existing;
  if(!observationLoads.has(scene))observationLoads.set(scene,(async()=>{
   switch(scene){
-   case 'rings':{const {StarseaExperience}=await import('./starsea.js?v=37');return starsea=new StarseaExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation,onFocus:()=>sfx.play('memory')});}
+   case 'rings':{const {StarseaExperience}=await import('./starsea.js?v=39');return starsea=new StarseaExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation,onFocus:()=>sfx.play('memory')});}
    case 'aurora':{const {AuroraTerraceExperience}=await import('./aurora-terrace.js?v=28');return auroraTerrace=new AuroraTerraceExperience({getReduced:()=>reduced,getName:()=>config.recipient,beforeOpen:beforeObservation,onReturn:afterObservation,onStarLit:count=>sfx.play(count===3?'wish':'detail')});}
    case 'sunset':{const {MoonlitPierExperience}=await import('./moonlit-pier.js?v=32');return moonlitPier=new MoonlitPierExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation});}
    case 'garden':{const {MoonGardenExperience}=await import('./moon-garden.js?v=7');return moonGarden=new MoonGardenExperience({getReduced:()=>reduced,beforeOpen:beforeObservation,onReturn:afterObservation,toggleHand:()=>toggleHands(),isHandActive:()=>hands.active,onStageReady:()=>{guide.show({id:'garden-bloom',target:moonGarden.root.querySelector('.garden-bloom-hint'),label:'轻触花影，唤起流萤'});},onBloom:()=>{guide.complete('garden-bloom');sfx.play('detail');}});}
@@ -248,6 +255,11 @@ $('play-voice').onclick=()=>{
  speechSynthesis.speak(utterance);$('media-audio').classList.add('playing');$('play-voice').textContent='停止留言 Ⅱ';
 };
 const mediaEditor=setupMediaEditor({getMemories:()=>editorMemories,setMemories:value=>{stopVoice();editorMemories=value;memories=recipientPreview?recipientMemories(value,config.includedMemories):value;journey.seen.clear();particles.setCards(memories);room.setMemories(memories);},config,toast,saveDraft,onSave:()=>{$('entry-title').textContent=config.entryTitle;$('entry-lead').textContent=SCENE_STORY[room.sceneName].lead;$('footer-message').textContent=config.footerText;$('name-display').textContent=config.recipient;$('ending-text').textContent=config.message;applyReduced();setRecipientPreview(true);syncJourney();if(view!=='entry')go('entry',{force:true});toast('收礼预览已准备好，轻触入口从头体验。');},beforeOpen:()=>{guide.hide();stopHold();stopVoice();room?.cancelIgnition();if(view==='cake'&&!wishDone)updateCakeUI();}});
+if(document.body.dataset.mode==='template'){
+ const openCreator=()=>{location.href=`./create/?scene=${encodeURIComponent(room?.sceneName||'aurora')}`;};
+ $('customize').onclick=openCreator;
+ $('template-create').onclick=openCreator;
+}
 if(!publishedGift){loadDraft().then(draft=>{$('restore-draft').hidden=!draft;}).catch(()=>{});}
 $('restore-draft').onclick=async()=>{
  try{
